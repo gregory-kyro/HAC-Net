@@ -9,9 +9,20 @@
   
 ### 3) Compute charges for mol2 files externally with Atomic Charge Calculator II (ACC2)
   - **ACC2: <https://acc2.ncbr.muni.cz/>**
-   -------------
-**4)** Identify non-problematic complexes, and create train, test, and validation hdf files
-  - convert_to_hdf.py
+
+### 4) Create train, test, and validation hdf files
+  - **create_hdf.py**
   
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  -------------------------
 **5)** Create hdf files containing voxelized train, test, and validation data for use in the 3dcnn
   - create_voxelized_hdf.py
