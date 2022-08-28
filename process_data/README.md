@@ -15,3 +15,6 @@
   
 ### 5) Create hdf files containing voxelized train, test, and validation data for use in the 3D-CNN
   - **create_voxelized_hdf.py**
+
+### 6) Calculate distance matrices for us in the MP-GCN
+  - **calc_distances.py**
