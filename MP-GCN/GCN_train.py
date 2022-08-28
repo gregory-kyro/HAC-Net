@@ -42,9 +42,9 @@ def train_gcn(data_dir, train_data, val_data, checkpoint_dir, checkpoint_name, l
     # define parameters
     checkpoint = True              # boolean flag for checkpoints
     checkpoint_iter = 100          # number of batches per checkpoint, if checkpoint_mid_epoch=True
-    epochs = 220                   # number of training epochs
     num_workers = 24               # number of workers for datloader
 
+    epochs = 220                   # number of training epochs
     batch_size = 7                 # batch size to use for training
     learning_rate = 0.001          # learning rate to use for training
     gather_width = 128             # gather width
