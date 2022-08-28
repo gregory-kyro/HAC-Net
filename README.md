@@ -1,2 +1,2 @@
 # HAC-Net
-A Hybrid Attention-Based Convolutional Neural Network for Predicting Protein-Ligand Binding Affinity
+##A Hybrid Attention-based Convolutional neural Network for predicting protein-ligand binding affinity##
