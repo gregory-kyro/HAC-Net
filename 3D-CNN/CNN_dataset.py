@@ -1,12 +1,14 @@
 import torch
 from torch.utils.data import Dataset
+import os
+import h5py
 
 ''' Define a class to contain the data that will be included in the dataloader 
 sent to the 3D-CNN '''
-class Dataset_hdf(Dataset):
+class CNN_Dataset(Dataset):
 
 	def __init__(self, hdf_path, feat_dim=22):
-		super(Dataset_hdf, self).__init__()
+		super(CNN_Dataset, self).__init__()
 		self.hdf_path = hdf_path
 		self.feat_dim = feat_dim
 		self.hdf = h5py.File(self.hdf_path, 'r')
