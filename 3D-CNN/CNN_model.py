@@ -3,8 +3,8 @@ import torch.nn as nn
 ''' Define 3D CNN model '''
 class Model_3DCNN(nn.Module):
 
-  def __conv_filter__(self, in_channels, out_channels, filter_size, stride, padding):
-    conv_filter = nn.Sequential(nn.Conv3d(in_channels, out_channels, filter_size=filter_size, stride=stride, padding=padding, bias=True), nn.ReLU(inplace=True), nn.BatchNorm3d(out_channels))
+  def __conv_filter__(self, in_channels, out_channels, kernel_size, stride, padding):
+    conv_filter = nn.Sequential(nn.Conv3d(in_channels, out_channels, kernel_size=kernel_size, stride=stride, padding=padding, bias=True), nn.ReLU(inplace=True), nn.BatchNorm3d(out_channels))
     return conv_filter
 
   def __init__(self, feat_dim=19, output_dim=1, use_cuda=True):
@@ -16,8 +16,8 @@ class Model_3DCNN(nn.Module):
     # SE block
     self.conv_block1 = self.__conv_filter__(self.feat_dim, 64, 9, 2, 3)
     self.glob_pool1 = nn.AdaptiveAvgPool3d(1)
-    self.SE_block = nn.Linear(in_features=64, out_features=64//16, bias=False)
-    self.relu1 = nn.ReLU()
+    self.SE_block1 = nn.Linear(in_features=64, out_features=64//16, bias=False)
+    self.relu = nn.ReLU()
     self.SE_block1_ = nn.Linear(in_features=64//16, out_features=64, bias=False)
     self.sigmoid = nn.Sigmoid()
 
@@ -100,5 +100,5 @@ class Model_3DCNN(nn.Module):
 
     # Linear layer 2
     linear2_z = self.linear2(linear1)
-    
+
     return linear2_z, linear1_z
