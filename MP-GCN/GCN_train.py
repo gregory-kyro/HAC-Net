@@ -91,7 +91,7 @@ def train_gcn(data_dir, train_data, val_data, checkpoint_dir, checkpoint_name, l
                 affinity = val_data_hdf[pdbid].attrs['affinity'].reshape(1,-1)
                 vdw_radii = (val_data_hdf[pdbid].attrs['van_der_waals'].reshape(-1, 1))
                 node_feats = np.concatenate([vdw_radii, val_data_hdf[pdbid][:, 3:22]], axis=1)
-                edge_index, edge_attr = dense_to_sparse(torch.from_numpy(dataset[1]).float()) ##--RAFI I don't see how this is helpful since pariwise_distances should return a positive value for everything except the main diagonal, so it's not sparse at all.
+                edge_index, edge_attr = dense_to_sparse(torch.from_numpy(dataset[1]).float())
                 x = torch.from_numpy(node_feats).float()
                 y = torch.FloatTensor(affinity).view(-1, 1)
                 data = Data(x=x, edge_index=edge_index, edge_attr=edge_attr.view(-1, 1), y=y)
@@ -183,7 +183,7 @@ def train_gcn(data_dir, train_data, val_data, checkpoint_dir, checkpoint_name, l
                 affinity = train_data_hdf[pdbid].attrs['affinity'].reshape(1,-1)
                 vdw_radii = (train_data_hdf[pdbid].attrs['van_der_waals'].reshape(-1, 1))
                 node_feats = np.concatenate([vdw_radii, train_data_hdf[pdbid][:, 3:22]], axis=1)
-                edge_index, edge_attr = dense_to_sparse(torch.from_numpy(dataset[1]).float()) ##--RAFI I don't see how this is helpful since pariwise_distances should return a positive value for everything except the main diagonal, so it's not sparse at all.
+                edge_index, edge_attr = dense_to_sparse(torch.from_numpy(dataset[1]).float()) 
                 x = torch.from_numpy(node_feats).float()
                 y = torch.FloatTensor(affinity).view(-1, 1)
                 data = Data(x=x, edge_index=edge_index, edge_attr=edge_attr.view(-1, 1), y=y)
