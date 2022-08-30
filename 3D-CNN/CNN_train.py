@@ -1,7 +1,9 @@
 from torch.utils.data import DataLoader
 from torch.optim import RMSprop, lr_scheduler
 import numpy as np
-import scipy.stats as stats
+from scipy import stats
+from sklearn.metrics import *
+import matplotlib.pyplot as plt
 
 def train_3dcnn(data_dir, train_hdf, val_hdf, checkpoint_dir, learning_decay_iter = 150, load_previous_checkpoint = False, previous_checkpoint = None, save_intermittently=False):
     '''
@@ -19,6 +21,7 @@ def train_3dcnn(data_dir, train_hdf, val_hdf, checkpoint_dir, learning_decay_ite
 
     Output:
     1) checkpoint file from the endpoint of the training
+
     '''
 
     # define parameters
