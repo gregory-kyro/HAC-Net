@@ -1,8 +1,7 @@
 ''' This process is largely inspired by Pafnucy <url to pafuncy>, utilizing the tfbio package <url to tfbio package>''' ### this line subject to change
-
 '''Inspired by the following code: https://gitlab.com/cheminfIBB/pafnucy/-/blob/master/prepare.py'''
 
-def convert_to_hdf(affinity_data_path, output_total_hdf, mol2_path, general_PDBs_path, refined_PDBs_path, output_val_hdf, output_train_hdf, output_test_hdf, path_to_elements_xml, bad_pdbids_input = [], val_fraction, test_fraction):
+def convert_to_hdf(affinity_data_path, output_total_hdf, mol2_path, general_PDBs_path, refined_PDBs_path, output_train_hdf, output_val_hdf, output_test_hdf, path_to_elements_xml,  val_fraction, test_fraction, num_splits=1, bad_pdbids_input = []):
     """
     This function converts the mol2 files into three cleaned hdf files containing datasets for training, testing, and validation complexes, respectively.
     input:
@@ -11,13 +10,15 @@ def convert_to_hdf(affinity_data_path, output_total_hdf, mol2_path, general_PDBs
     3) path/to/mol2/files
     4) path/to/PDBs/in/general_set
     5) path/to/PDBs/in/refined_set
-    6) path/to/output/validation/hdf/file.hdf
-    7) path/to/output/training/hdf/file.hdf
+    6)  path/to/output/training/hdf/file.hdf
+    7) path/to/output/validation/hdf/file.hdf
     8) path/to/output/testing/hdf/file.hdf
     9) path/to/elements.xml
-    10) bad_pdbids_input, an array containing any pdbids that crashed chimera or crashed this function (roughly 1 in 3,000 files). Set to [] by default
-    11) fraction of the data to be reserved for validation
-    12) fraction of the data to be reserved for testing 
+    10) fraction of the data to be reserved for validation
+    11) fraction of the data to be reserved for testing
+    12) number of splits to create (with non-overlapping test sets)
+    13) bad_pdbids_input, an array containing any pdbids that crashed chimera or crashed this function (roughly 1 in 3,000 files). Set to [] by default
+ 
     output:
     1)  a complete hdf file containing featurized data for all of the PDB id's that will be used, saved as:
         'path/to/output/hdf/file.hdf'
@@ -36,9 +37,10 @@ def convert_to_hdf(affinity_data_path, output_total_hdf, mol2_path, general_PDBs
     import h5py
     import csv
     import xml.etree.ElementTree as ET
+    import os
 
     # Import the Featurizer class from tfbio(source code here): https://gitlab.com/cheminfIBB/tfbio/-/blob/master/tfbio/data.py
-    from tfbio.data import Featurizer
+    #from tfbio.data import Featurizer
 
     
     # define function to select pocket mol2 files with atoms that have unrealistic charges
@@ -87,12 +89,10 @@ def convert_to_hdf(affinity_data_path, output_total_hdf, mol2_path, general_PDBs
     affinities = pd.read_csv(affinity_data_path)
     pdbids_cleaned = affinities['pdbid'].to_numpy()
     bad_complexes = bad_pdbids_input
-
-    # define empty lists to contain pocket and ligand files
-    pocket_files = []
-    ligand_files = []
+    
 
     # fill lists with paths to pocket and ligand mol2 files
+    pocket_files, ligand_files = [], []
     for i in range(0, len(pdbids_cleaned)):
         if pdbids_cleaned[i] not in bad_complexes:
             pocket_files.append(mol2_path + "/" + pdbids_cleaned[i] + '_pocket.mol2')
@@ -109,8 +109,9 @@ def convert_to_hdf(affinity_data_path, output_total_hdf, mol2_path, general_PDBs
 
     featurizer = Featurizer()
 
+
     # create a new hdf file to store all of the data
-    with h5py.File(output_total_hdf, 'r+') as f:
+    with h5py.File(output_total_hdf, 'a') as f:
 
         pocket_generator = __get_pocket()
         for lfile in ligand_files:
@@ -124,7 +125,7 @@ def convert_to_hdf(affinity_data_path, output_total_hdf, mol2_path, general_PDBs
 
             # read ligand file using pybel
             ligand = next(openbabel.pybel.readfile('mol2', lfile))
- 
+
 
             # extract features from pocket and check for unrealistic charges
             pocket_coords, pocket_features, pocket_vdw = next(pocket_generator)
@@ -173,44 +174,58 @@ def convert_to_hdf(affinity_data_path, output_total_hdf, mol2_path, general_PDBs
     affinity_data_cleaned['Percentile']= pd.qcut(affinity_data_cleaned['-logKd/Ki'],
                                 q = 100, labels = False)
                                 
-    # create empty arrays to store non-training pdbids
-    test_pdbids = []
-    val_pdbids = []
+    
 
-    # select test data (10% of total) and validation data (5% of total) that have even distributions of
-    # affinity percentiles compared to training data
-    val_to_sample = round(val_fraction*num_complexes/100)
-    test_to_sample= round(test_fraction*num_complexes/100)
+    # compute number of complexes to sample from each percentile for validation and testing, respectively
+    val_to_sample = round(val_fraction*num_pockets/100)
+    test_to_sample= round(test_fraction*num_pockets/100)
 
-    for i in range(0, 100):
-        temp = affinity_data_cleaned[affinity_data_cleaned['Percentile'] == i]
-        num_vals = len(temp)
-        val_rows = temp.sample(val_to_sample)
-        val_pdbids = np.hstack((val_pdbids, (val_rows['pdbid']).to_numpy()))
-        for pdbid in (val_rows['pdbid']).to_numpy():
-            temp = temp[temp.pdbid != pdbid]
-        test_rows = temp.sample(test_to_sample)
-        test_pdbids = np.hstack((test_pdbids, (test_rows['pdbid']).to_numpy()))
 
-    # populate the test and validation hdf files by transferring those datasets from the total file
-    with h5py.File(output_test_hdf, 'w') as g, \
-    h5py.File(output_val_hdf, 'w') as h:
-        with h5py.File(output_total_hdf, 'r') as f:
-            for pdbid in val_pdbids:
-                ds = h.create_dataset(pdbid, data=f[pdbid], compression = 'lzf')
-                ds.attrs['affinity'] = f[pdbid].attrs['affinity']
-                ds.attrs["van_der_waals"] = f[pdbid].attrs["van_der_waals"]
-            for pdbid in test_pdbids:
-                ds = g.create_dataset(pdbid, data=f[pdbid], compression = 'lzf')
-                ds.attrs['affinity'] = f[pdbid].attrs['affinity']
-                ds.attrs["van_der_waals"] = f[pdbid].attrs["van_der_waals"]
-            
-    # populate the train hdf file by transferring all other datasets from the total file
-    holdouts = np.hstack((val_pdbids,test_pdbids))
-    with h5py.File(output_train_hdf, 'w') as g:
-        with h5py.File(output_total_hdf, 'r') as f:
-            for pdbid in affinity_data_cleaned['pdbid'].to_numpy():
-                if pdbid not in holdouts:
+    #Divide up the total number of complexes into the given number of splits
+    previous_test_pdbids=[]
+
+    for rep in range (0, num_splits):
+        # create empty arrays
+        test_pdbids = []
+        val_pdbids = []
+    
+        #generate names for output hdf files
+        output_train_hdf_temp = output_train_hdf[:-4] + str(rep) + '.hdf'
+        output_val_hdf_temp= output_val_hdf[:-4] + str(rep) + '.hdf'
+        output_test_hdf_temp= output_test_hdf[:-4] + str(rep) + '.hdf'
+
+        #assemble lists of pdbids for validation and test sets
+        for i in range(0, 100):
+            temp = affinity_data_cleaned[affinity_data_cleaned['Percentile'] == i]
+            num_vals = len(temp)
+            val_rows = temp.sample(val_to_sample)
+            val_pdbids = np.hstack((val_pdbids, (val_rows['pdbid']).to_numpy()))
+            for pdbid in (val_rows['pdbid']).to_numpy():
+                temp = temp[temp.pdbid != pdbid]
+            temp = temp[~temp.pdbid.isin(previous_test_pdbids)]
+            test_rows = temp.sample(test_to_sample)
+            test_pdbids = np.hstack((test_pdbids, (test_rows['pdbid']).to_numpy()))
+
+        previous_test_pdbids.append(test_pdbids)
+
+        # populate the test and validation hdf files by transferring those datasets from the total file
+        with h5py.File(output_test_hdf_temp, 'w') as g, h5py.File(output_val_hdf_temp, 'w') as h:
+            with h5py.File(output_total_hdf, 'r') as f:
+                for pdbid in val_pdbids:
+                    ds = h.create_dataset(pdbid, data=f[pdbid], compression = 'lzf')
+                    ds.attrs['affinity'] = f[pdbid].attrs['affinity']
+                    ds.attrs["van_der_waals"] = f[pdbid].attrs["van_der_waals"]
+                for pdbid in test_pdbids:
                     ds = g.create_dataset(pdbid, data=f[pdbid], compression = 'lzf')
                     ds.attrs['affinity'] = f[pdbid].attrs['affinity']
                     ds.attrs["van_der_waals"] = f[pdbid].attrs["van_der_waals"]
+                
+        # populate the train hdf file by transferring all other datasets from the total file
+        holdouts = np.hstack((val_pdbids,test_pdbids))
+        with h5py.File(output_train_hdf_temp, 'w') as g:
+            with h5py.File(output_total_hdf, 'r') as f:
+                for pdbid in affinity_data_cleaned['pdbid'].to_numpy():
+                    if pdbid not in holdouts:
+                        ds = g.create_dataset(pdbid, data=f[pdbid], compression = 'lzf')
+                        ds.attrs['affinity'] = f[pdbid].attrs['affinity']
+                        ds.attrs["van_der_waals"] = f[pdbid].attrs["van_der_waals"]
