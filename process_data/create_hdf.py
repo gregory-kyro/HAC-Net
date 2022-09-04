@@ -1,5 +1,5 @@
-''' This process is largely inspired by Pafnucy <url to pafuncy>, utilizing the tfbio package <url to tfbio package>''' ### this line subject to change
-'''Inspired by the following code: https://gitlab.com/cheminfIBB/pafnucy/-/blob/master/prepare.py'''
+''' This process is largely inspired by Pafnucy <https://gitlab.com/cheminfIBB/pafnucy/-/blob/master/prepare.py>, utilizing the tfbio package''' 
+
 
 def convert_to_hdf(affinity_data_path, output_total_hdf, mol2_path, general_PDBs_path, refined_PDBs_path, output_train_hdf, output_val_hdf, output_test_hdf, path_to_elements_xml,  val_fraction, test_fraction, num_splits=1, bad_pdbids_input = []):
     """
