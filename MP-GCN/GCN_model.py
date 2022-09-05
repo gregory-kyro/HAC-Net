@@ -60,7 +60,7 @@ class Gated_Graph(MessagePassing):
         # if input size <= out_channels, pad input with 0s to achieve the same size
         if node_feat.size(1) < self.out_channels:
             zero = node_feat.new_zeros(node_feat.size(0), self.out_channels - node_feat.size(1))
-            node_fea = torch.cat([node_feat, zero], dim=1)
+            node_feat = torch.cat([node_feat, zero], dim=1)
         for i in range(self.num_layers):
             mat_mul = torch.matmul(node_feat, self.weight[i])
             mat_mul = self.propagate(edge_index=edge_index, x=node_feat, aggregation=self.aggregation)
