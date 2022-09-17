@@ -6,4 +6,4 @@ Applying deep learning concepts from image detection and graph theory has greatl
 ![Picture1](https://user-images.githubusercontent.com/98780179/190861629-6536a183-a82e-4360-88be-14b94ad8de12.png)
 
 ## MP-GCN!
-[Picture2](https://user-images.githubusercontent.com/98780179/190861694-52cad368-eeaf-4b50-a3f2-2ed4c5d31cc2.png)
+![Picture2](https://user-images.githubusercontent.com/98780179/190861694-52cad368-eeaf-4b50-a3f2-2ed4c5d31cc2.png)
