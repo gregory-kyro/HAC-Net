@@ -9,4 +9,7 @@ HAC-Net is a deep learning model composed of one ResNet-inspired 3D-CNN and two 
 
 ## Contact
 Please feel free to reach out to us through either of the following emails if you have any questions or concerns:
-gregory.kyro@yale.edu , rafi.brent@yale.edu
+
+gregory.kyro@yale.edu
+
+rafi.brent@yale.edu
