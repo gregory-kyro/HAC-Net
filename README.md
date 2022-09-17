@@ -56,10 +56,10 @@ The 2016 PDBbind core set, compiled from the 2016 Comparative Assessment of Scor
 
 ![Picture3](https://user-images.githubusercontent.com/98780179/190868153-7c651f72-6cba-442d-8b89-bd9423842765.png)
 
+![Picture4](https://user-images.githubusercontent.com/98780179/190868225-e253fab9-7ecd-4732-a28e-caa0556b4455.png)
+
 ## Attention-Based Implementations
 
 The results presented here suggest that deep learning models for binding affinity can benefit significantly from incorporating forms of attention into their feature-extraction protocols. This is conveyed in the 3D-CNN with SE convolution blocks providing a self-attention mechanism on the channels, and in the MP-GCN with a soft attention mechanism applied to the aggregation of messages from neighboring nodes.  To demonstrate this point, we independently trained and tested an analogous hybrid model without these multiple forms of attention, and compared the performance to that of HAC-Net. We refer to the 3D-CNN without squeeze and excitation applied to the convolutional procedure as the “vanilla 3D-CNN” and to the MP-GCN without soft attention applied to the aggregation step as the “vanilla MP-GCN”.
 
 ![Picture5](https://user-images.githubusercontent.com/98780179/190868298-2f652873-9b87-479c-81b1-0e09ce9d2b8e.png)
-
-![Picture4](https://user-images.githubusercontent.com/98780179/190868225-e253fab9-7ecd-4732-a28e-caa0556b4455.png)
