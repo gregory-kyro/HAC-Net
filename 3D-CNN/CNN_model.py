@@ -87,11 +87,8 @@ class Model_3DCNN(nn.Module):
     SE_block3_a = self.sigmoid(SE_block3_).view(a3, b3, 1, 1, 1)  
     se3 = conv3 * SE_block3_a.expand_as(conv3)  
 
-    # Pooling layer
-    pool3 = se3
-
     # Flatten
-    flatten = pool3.view(pool3.size(0), -1)
+    flatten = se3.view(se3.size(0), -1)
 
     # Linear layer 1
     linear1_z = self.linear1(flatten)
