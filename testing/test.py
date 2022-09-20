@@ -13,7 +13,7 @@ import scipy as sp
 from scipy.stats import *
 from sklearn.metrics import *
 
-def test_hybrid(test='hybrid',cnn_test_path, gcn0_test_path, gcn1_test_path, cnn_checkpoint_path, gcn0_checkpoint_path, gcn1_checkpoint_path):
+def test_hybrid(test,cnn_test_path, gcn0_test_path, gcn1_test_path, cnn_checkpoint_path, gcn0_checkpoint_path, gcn1_checkpoint_path):
 
     """
     Define a function to test the hybrid model, 3D-CNN, or MP-GCN
@@ -42,14 +42,14 @@ def test_hybrid(test='hybrid',cnn_test_path, gcn0_test_path, gcn1_test_path, cnn
     else:   
         device = torch.device('cpu')  
 
-    if test = 'hybrid' or 'cnn':
+    if test == 'hybrid' or 'cnn':
         # 3D-CNN
         batch_size = 50
         # load dataset
         cnn_dataset = Dataset_npy(cnn_test_path)
         # initialize data loader
         batch_count = len(cnn_dataset) // batch_size
-        cnn_dataloader = DataLoader(cnn_dataset, batch_size=bacth_size, shuffle=False, num_workers=0, worker_init_fn=None)
+        cnn_dataloader = DataLoader(cnn_dataset, batch_size=batch_size, shuffle=False, num_workers=0, worker_init_fn=None)
         # define model
         cnn_model = Model_Linear(use_cuda=use_cuda)
         cnn_model.to(device)
@@ -77,12 +77,12 @@ def test_hybrid(test='hybrid',cnn_test_path, gcn0_test_path, gcn1_test_path, cnn
                 y_true_cnn[batch_ind*batch_size:batch_ind*batch_size+bsize] = ytrue
                 y_pred_cnn[batch_ind*batch_size:batch_ind*batch_size+bsize] = ypred
 
-    if test = 'hybrid' or 'gcn0':
+    if test == 'hybrid' or 'gcn0':
         # MP-GCN-0
         gcn0_dataset = GCN_Dataset(gcn0_test_path, output_info = True)
         # initialize testing data loader
         batch_count = len(gcn0_dataset) // batch_size
-        gcn0_dataloader = DataListLoader(gcn_dataset, batch_size=7, shuffle=False)
+        gcn0_dataloader = DataListLoader(gcn0_dataset, batch_size=7, shuffle=False)
         # define model
         gcn0_model = GeometricDataParallel(MP_GCN(in_channels=20, out_channels=1, gather_width=128, prop_iter=4, dist_cutoff=3.5)).float()
         # load checkpoint file
@@ -115,7 +115,7 @@ def test_hybrid(test='hybrid',cnn_test_path, gcn0_test_path, gcn1_test_path, cnn
         y_true_gcn0 = np.concatenate(y_true_gcn0).reshape(-1, 1).squeeze(1)
         y_pred_gcn0 = np.concatenate(y_pred_gcn0).reshape(-1, 1).squeeze(1)
 
-    if test = 'hybrid' or 'gcn1':
+    if test == 'hybrid' or 'gcn1':
         # MP-GCN-1
         gcn1_dataset = GCN_Dataset(gcn1_test_path, output_info = True)
         # initialize testing data loader
@@ -154,7 +154,7 @@ def test_hybrid(test='hybrid',cnn_test_path, gcn0_test_path, gcn1_test_path, cnn
         y_pred_gcn1 = np.concatenate(y_pred_gcn1).reshape(-1, 1).squeeze(1)
 
     # compute metrics
-    if test = 'hybrid':
+    if test == 'hybrid':
         y_true = y_true_cnn/3 + y_true_gcn0/3 + y_true_gcn1/3
         y_pred = y_pred_cnn/3 + y_pred_gcn0/3 + y_pred_gcn1/3
         # define rmse
@@ -172,7 +172,7 @@ def test_hybrid(test='hybrid',cnn_test_path, gcn0_test_path, gcn1_test_path, cnn
         # define standard deviation
         std = np.std(y_pred)
 
-    if test = 'cnn':
+    if test == 'cnn':
         y_true = y_true_cnn
         y_pred = y_pred_cnn
         # define rmse
@@ -190,7 +190,7 @@ def test_hybrid(test='hybrid',cnn_test_path, gcn0_test_path, gcn1_test_path, cnn
         # define standard deviation
         std = np.std(y_pred)
 
-    if test = 'gcn0':
+    if test == 'gcn0':
         y_true = y_true_gcn0
         y_pred = y_pred_gcn0
         # define rmse
@@ -208,7 +208,7 @@ def test_hybrid(test='hybrid',cnn_test_path, gcn0_test_path, gcn1_test_path, cnn
         # define standard deviation
         std = np.std(y_pred)
 
-    if test = 'gcn1':
+    if test == 'gcn1':
         y_true = y_true_gcn1
         y_pred = y_pred_gcn1
         # define rmse
