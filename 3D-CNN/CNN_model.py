@@ -98,4 +98,4 @@ class Model_3DCNN(nn.Module):
     # Linear layer 2
     linear2_z = self.linear2(linear1)
 
-    return linear2_z, linear1_z
+    return linear2_z, linear1_z  # if feature extraction: return linear2_z, flatten
