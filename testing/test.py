@@ -4,7 +4,7 @@ import math
 import torch
 from torch.nn.parallel import DataParallel, DistributedDataParallel
 from torch_geometric.nn import DataParallel as GeometricDataParallel
-from torch_geometric.data import DataListLoader
+from torch_geometric.data import DataListLoader, Data
 from torch_geometric.utils import dense_to_sparse
 from torch.utils.data import Dataset, DataLoader
 import matplotlib.pyplot as plt
@@ -13,7 +13,7 @@ import scipy as sp
 from scipy.stats import *
 from sklearn.metrics import *
 
-def test_hybrid(test,cnn_test_path, gcn0_test_path, gcn1_test_path, cnn_checkpoint_path, gcn0_checkpoint_path, gcn1_checkpoint_path):
+def test_hybrid(test, cnn_test_path, gcn0_test_path, gcn1_test_path, cnn_checkpoint_path, gcn0_checkpoint_path, gcn1_checkpoint_path):
 
     """
     Define a function to test the hybrid model, 3D-CNN, or MP-GCN
@@ -232,7 +232,7 @@ def test_hybrid(test,cnn_test_path, gcn0_test_path, gcn1_test_path, cnn_checkpoi
 
     #print scatterplot of true and predicted values
     plt.rcParams["figure.figsize"] = (7,7)
-    plt.scatter(y_true, y_pred, color='darkslateblue', edgecolors='black')
+    plt.scatter(y_true, y_pred, color='darkslateblue', edgecolors='black')       # color = firebrick if VANILLA
     plt.xlabel("True", fontsize=20, weight='bold')
     plt.ylabel("Predicted", fontsize=20, weight='bold')
     plt.xticks([0,3,6,9,12], fontsize=18)
