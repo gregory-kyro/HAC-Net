@@ -27,7 +27,7 @@ def train_3dcnn(data_dir, train_hdf, val_hdf, checkpoint_dir, learning_decay_ite
     # define parameters
     batch_size = 50
     learning_rate = .0007
-    epoch_count = 200
+    epoch_count = 100
     checkpoint_iter = 343
     device_name = 'cuda:0'
 
