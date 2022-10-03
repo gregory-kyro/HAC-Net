@@ -1,6 +1,6 @@
 import torch.nn as nn
 
-''' Define 3D CNN model '''
+''' Define 3D-CNN model '''
 class Model_3DCNN(nn.Module):
 
   def __conv_filter__(self, in_channels, out_channels, kernel_size, stride, padding):
