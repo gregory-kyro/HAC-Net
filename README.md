@@ -7,7 +7,7 @@ Applying deep learning concepts from image detection and graph theory has greatl
 
 ## Overview of Model
 <p align='center>
-   <![ezgif com-gif-maker](https://user-images.githubusercontent.com/98780179/198733134-e0864640-c291-4e95-8778-39eb8a5bd182.gif)>
+   ![ezgif com-gif-maker](https://user-images.githubusercontent.com/98780179/198733134-e0864640-c291-4e95-8778-39eb8a5bd182.gif)
 </p>
 
 
