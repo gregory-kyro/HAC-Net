@@ -1,4 +1,5 @@
- ![hacnet_logo](https://user-images.githubusercontent.com/98780179/198724316-bba398e6-aac6-412f-b6c6-6d5b07f603de.png)
+![hacnet_logo](https://user-images.githubusercontent.com/98780179/198724926-ba493618-bbe2-40b6-b083-f4160e5ac740.png)
+
 
 
 # HAC-Net: A Hybrid Attention-Based Convolutional Neural Network for Predicting Protein-Ligand Binding Affinity
