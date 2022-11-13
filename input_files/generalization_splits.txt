@@ -111,7 +111,6 @@ PDB ID,Sequence-based assignment,Structure-based assignment
 1bxo,train,train
 1bxq,train,train
 1bxr,test,valid
-1byk,test,train
 1bzc,test,train
 1bzh,test,train
 1bzj,train,train
@@ -739,7 +738,6 @@ PDB ID,Sequence-based assignment,Structure-based assignment
 1qxk,train,train
 1qy1,train,train
 1qy2,test,train
-1qy5,train,train
 1r0p,train,train
 1r0x,train,train
 1r1h,train,train
@@ -761,7 +759,6 @@ PDB ID,Sequence-based assignment,Structure-based assignment
 1rek,train,train
 1rgk,train,train
 1rgl,train,train
-1rle,train,train
 1rnt,train,train
 1ro6,train,train
 1ro7,train,train
@@ -779,7 +776,6 @@ PDB ID,Sequence-based assignment,Structure-based assignment
 1sdu,valid,valid
 1sdv,valid,valid
 1sgu,train,train
-1sgx,train,train
 1sh9,train,test
 1siv,train,test
 1sl3,train,train
@@ -904,7 +900,6 @@ PDB ID,Sequence-based assignment,Structure-based assignment
 1vja,train,valid
 1vjc,train,train
 1vjd,train,train
-1vjj,train,test
 1vkj,train,test
 1vot,valid,train
 1vwl,train,train
@@ -936,7 +931,6 @@ PDB ID,Sequence-based assignment,Structure-based assignment
 1wcq,valid,train
 1wdn,train,train
 1we2,train,train
-1wei,train,train
 1wht,valid,valid
 1wkm,valid,valid
 1wm1,train,test
@@ -1027,7 +1021,6 @@ PDB ID,Sequence-based assignment,Structure-based assignment
 1zsr,valid,test
 1zvx,train,train
 220l,train,train
-2a31,valid,valid
 2a4m,valid,train
 2a5b,valid,train
 2a5c,valid,valid
@@ -1081,7 +1074,6 @@ PDB ID,Sequence-based assignment,Structure-based assignment
 2br6,train,train
 2brb,train,valid
 2brm,train,train
-2bsu,train,train
 2bt9,train,train
 2bvd,train,train
 2byr,valid,train
@@ -1274,6 +1266,7 @@ PDB ID,Sequence-based assignment,Structure-based assignment
 4tmk,train,train
 4tmn,train,train
 4ts1,train,train
+4xxh,test,train
 5abp,train,train
 5er1,train,train
 5er2,train,train
