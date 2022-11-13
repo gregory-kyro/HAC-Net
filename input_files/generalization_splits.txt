@@ -195,7 +195,7 @@ PDB ID,Sequence-based assignment,Structure-based assignment
 1e3v,train,train
 1e4h,train,train
 1e5a,train,train
-1.00E+66,test,train
+1e66,test,train
 1e6q,train,train
 1e6s,train,train
 1ec9,train,train
