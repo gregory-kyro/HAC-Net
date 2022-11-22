@@ -78,13 +78,13 @@ def test_hybrid(test, cnn_test_path, gcn0_test_path, gcn1_test_path, cnn_checkpo
                 y_pred_cnn[batch_ind*batch_size:batch_ind*batch_size+bsize] = ypred
 
     if test == 'hybrid' or 'gcn0':
-        # MP-GCN-0
-        gcn0_dataset = GCN_Dataset(gcn0_test_path, output_info = True)
+        # GCN-0
+        gcn0_dataset = GCN_Dataset(gcn0_test_path)
         # initialize testing data loader
         batch_count = len(gcn0_dataset) // batch_size
         gcn0_dataloader = DataListLoader(gcn0_dataset, batch_size=7, shuffle=False)
         # define model
-        gcn0_model = GeometricDataParallel(MP_GCN(in_channels=20, out_channels=1, gather_width=128, prop_iter=4, dist_cutoff=3.5)).float()
+        gcn0_model = GeometricDataParallel(MP_GCN(in_channels=20, gather_width=128, prop_iter=4, dist_cutoff=3.5)).float()
         # load checkpoint file
         gcn0_checkpoint = torch.load(gcn0_checkpoint_path, map_location=device)
         # model state dict
@@ -116,13 +116,13 @@ def test_hybrid(test, cnn_test_path, gcn0_test_path, gcn1_test_path, cnn_checkpo
         y_pred_gcn0 = np.concatenate(y_pred_gcn0).reshape(-1, 1).squeeze(1)
 
     if test == 'hybrid' or 'gcn1':
-        # MP-GCN-1
-        gcn1_dataset = GCN_Dataset(gcn1_test_path, output_info = True)
+        # GCN-1
+        gcn1_dataset = GCN_Dataset(gcn1_test_path)
         # initialize testing data loader
         batch_count = len(gcn0_dataset) // batch_size
         gcn1_dataloader = DataListLoader(gcn1_dataset, batch_size=7, shuffle=False)
         # define model
-        gcn1_model = GeometricDataParallel(MP_GCN(in_channels=20, out_channels=1, gather_width=128, prop_iter=4, dist_cutoff=3.5)).float()
+        gcn1_model = GeometricDataParallel(MP_GCN(in_channels=20, gather_width=128, prop_iter=4, dist_cutoff=3.5)).float()
         # load checkpoint file
         gcn1_checkpoint = torch.load(gcn1_checkpoint_path, map_location=device)
         # model state dict
