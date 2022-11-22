@@ -2,7 +2,6 @@ import os
 import numpy as np
 import h5py
 import random
-from tqdm import tqdm
 from scipy import stats
 from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
 import torch
@@ -15,36 +14,26 @@ from torch_geometric.utils import dense_to_sparse
 import matplotlib.pyplot as plt
 
 ''' Define train function for MP-GCN'''
-def train_gcn(data_dir, train_data, val_data, checkpoint_dir, checkpoint_name, load_checkpoint_bool=False, load_checkpoint_path = None, checkpoint_mid_epoch=False):
+def train_gcn(train_data, val_data, checkpoint_name, best_checkpoint_name, load_checkpoint_path = None, best_previous_checkpoint=None):
 
     '''
     Inputs:
-    1) data_dir: path to hdf files
-    2) train_data: training hdf file name
-    3) val_data: validation hdf file name
-    4) checkpoint_dir: path/to/checkpoint/location/
-    5) checkpoint_name: checkpoint_name.pt
-    5) load_checkpoint_bool: boolean flag for whether to start training from a prior checkpoint; default is False
-    6) load_checkpoint_path: path to checkpoint file to load; default is None
-    7) checkpoint_mid_epoch: boolean flag for whether to save checkpoints in the middle of epochs, as opposed to only at epoch end; default is False
-
+    1) train_data: training hdf file name
+    2) val_data: validation hdf file name
+    3) checkpoint_name: path to save checkpoint_name.pt
+    4) best_checkpoint_name: path to save best_checkpoint_name.pt
+    5) load_checkpoint_path: path to checkpoint file to load; default is None, i.e. training from scratch
+    6) best_previous_checkpoint: path to the best checkpoint from the previous round of training (required); default is None, i.e. training from scratch
     Output:
     1) checkpoint file, to load into testing function; saved as: checkpoint_dir + checkpoint_name
     '''
-
-    # set directory to path containing hdf files
-    os.chdir(data_dir)
 
     # define train and validation hdf files
     train_data_hdf = h5py.File(train_data, 'r')
     val_data_hdf = h5py.File(val_data, 'r')
 
     # define parameters
-    checkpoint = True              # boolean flag for checkpoints
-    checkpoint_iter = 100          # number of batches per checkpoint, if checkpoint_mid_epoch=True
-    num_workers = 24               # number of workers for datloader
-
-    epochs = 220                   # number of training epochs
+    epochs = 300                   # number of training epochs
     batch_size = 7                 # batch size to use for training
     learning_rate = 0.001          # learning rate to use for training
     gather_width = 128             # gather width
@@ -64,27 +53,30 @@ def train_gcn(data_dir, train_data, val_data, checkpoint_dir, checkpoint_name, l
 
     def worker_init_fn(worker_id):
         np.random.seed(int(0))
+        
+    # initialize checkpoint parameters
+    checkpoint_epoch = 0
+    checkpoint_step = 0
+    epoch_train_losses, epoch_val_losses, epoch_avg_corr = [], [], []
+    best_average_corr = float('-inf')
 
     # define function to return checkpoint dictionary
     def checkpoint_model(model, dataloader, epoch, step):
         validate_dict = validate(model, dataloader)
         model.train()
-        checkpoint_dict = {'model_state_dict': model.state_dict(), 'args': NoneType, 'step': step, 'epoch': epoch, 'validate_dict': validate_dict,
-                           'epoch_train_losses': epoch_train_losses, 'epoch_val_losses': epoch_val_losses, 'epoch_avg_corr': epoch_avg_corr}
-        torch.save(checkpoint_dict, checkpoint_dir + checkpoint_name)
-        # return the computed metrics so it can be used to update the training loop
+        checkpoint_dict = {'model_state_dict': model.state_dict(), 'step': step, 'epoch': epoch, 'validate_dict': validate_dict,
+                           'epoch_train_losses': epoch_train_losses, 'epoch_val_losses': epoch_val_losses, 'epoch_avg_corr': epoch_avg_corr, 'best_avg_corr': best_average_corr}
+        torch.save(checkpoint_dict, checkpoint_name)
         return checkpoint_dict
 
     # define function to perform validation
     def validate(model, val_dataloader):
         # initialize
         model.eval()
-        y_true = []
-        y_pred = []
-        pdbid_list = []
-        pose_list = []
+        y_true = np.zeros((len(val_dataset),), dtype=np.float32)
+        y_pred = np.zeros((len(val_dataset),), dtype=np.float32)
         # validation
-        for batch in tqdm(val_dataloader):
+        for batch_ind, batch in enumerate(val_dataloader):
             data_list = []
             for dataset in batch:
                 pdbid = dataset[0]
@@ -96,19 +88,13 @@ def train_gcn(data_dir, train_data, val_data, checkpoint_dir, checkpoint_name, l
                 y = torch.FloatTensor(affinity).view(-1, 1)
                 data = Data(x=x, edge_index=edge_index, edge_attr=edge_attr.view(-1, 1), y=y)
                 data_list.append(data)
-            if len(data_list) < 1:
-                print('empty batch, skipping to next batch')
-                continue
-
-            batch_data = [x for x in data_list if x is not None]
+            batch_data = [x for x in data_list]
             y_ = model(batch_data)
             y = torch.cat([x.y for x in data_list])
-            pdbid_list.extend([x[0] for x in batch])
-            y_true.append(y.cpu().data.numpy())
-            y_pred.append(y_.cpu().data.numpy())
-
-        y_true = np.concatenate(y_true).reshape(-1, 1)
-        y_pred = np.concatenate(y_pred).reshape(-1, 1)
+            y_true[batch_ind*batch_size:batch_ind*batch_size+7] = y.cpu().float().data.numpy()[:,0]
+            y_pred[batch_ind*batch_size:batch_ind*batch_size+7] = y_.cpu().float().data.numpy()[:,0]
+            loss = criterion(y.float(), y_.cpu().float())
+            print('[%d/%d-%d/%d] validation loss: %.3f' % (epoch+1, epochs, batch_ind+1, len(val_dataset)//batch_size, loss))
 
         # compute r^2
         r2 = r2_score(y_true=y_true, y_pred=y_pred)
@@ -121,39 +107,32 @@ def train_gcn(data_dir, train_data, val_data, checkpoint_dir, checkpoint_name, l
         # compte spearman correlation coefficient
         spearmanr = stats.spearmanr(y_true.reshape(-1), y_pred.reshape(-1))[0]
         # write out metrics
-        tqdm.write(str(
-                'r2: {}\tmae: {}\trmse: {}\tpearsonr: {}\t spearmanr: {}'.format(r2, mae, mse**(1/2), pearsonr, spearmanr)))
+        print('r2: {}\tmae: {}\trmse: {}\tpearsonr: {}\t spearmanr: {}'.format(r2, mae, mse**(1/2), pearsonr, spearmanr))
         epoch_val_losses.append(mse)
         epoch_avg_corr.append((pearsonr+spearmanr)/2)
         model.train()
         return {'r2': r2, 'mse': mse, 'mae': mae, 'pearsonr': pearsonr, 'spearmanr': spearmanr,
-                'y_true': y_true, 'y_pred': y_pred, 'pdbid': pdbid_list}
+                'y_true': y_true, 'y_pred': y_pred, 'best_average_corr': best_average_corr}
    
     # construct model
-    model = GeometricDataParallel(MP_GCN(in_channels=feature_size, out_channels=1, gather_width=gather_width, prop_iter=prop_iter, dist_cutoff=dist_cutoff)).float()
+    model = GeometricDataParallel(MP_GCN(in_channels=feature_size, gather_width=gather_width, prop_iter=prop_iter, dist_cutoff=dist_cutoff)).float()
 
-    train_dataset = GCN_Dataset(data_file=train_data, output_info=True)
-    val_dataset = GCN_Dataset(data_file=val_data, output_info=True)
+    train_dataset = GCN_Dataset(data_file=train_data)
+    val_dataset = GCN_Dataset(data_file=val_data)
         
     # construct training and validation dataloaders to be fed to model
+    batch_count=len(train_dataset)
     train_dataloader = DataListLoader(train_dataset, batch_size=batch_size, shuffle=True, worker_init_fn=worker_init_fn, drop_last=True)
     val_dataloader = DataListLoader(val_dataset, batch_size=batch_size, shuffle=False, worker_init_fn=worker_init_fn, drop_last=True)
-    
-    # print statement of complexes for sanity check
-    tqdm.write('{} complexes in training dataset'.format(len(train_dataset)))
-    tqdm.write('{} complexes in validation dataset'.format(len(val_dataset)))
-
-    # initialize checkpoint parameters
-    checkpoint_epoch = 0
-    checkpoint_step = 0
-    epoch_train_losses, epoch_val_losses, epoch_avg_corr = [], [], []
 
     # load checkpoint file
-    if load_checkpoint_bool:
+    if load_checkpoint_path != None:
         if torch.cuda.is_available():
             model_train_dict = torch.load(load_checkpoint_path)
+            best_checkpoint = torch.load(best_previous_checkpoint)
         else:
             model_train_dict = torch.load(load_checkpoint_path, map_location=torch.device('cpu'))
+            best_checkpoint = torch.load(best_previous_checkpoint, map_location = torch.device('cpu'))
         model.load_state_dict(model_train_dict['model_state_dict'])
         checkpoint_epoch = model_train_dict['epoch']
         checkpoint_step = model_train_dict['step']
@@ -161,6 +140,8 @@ def train_gcn(data_dir, train_data, val_data, checkpoint_dir, checkpoint_name, l
         epoch_val_losses = model_train_dict['epoch_val_losses']
         epoch_avg_corr = model_train_dict['epoch_avg_corr']
         val_dict = model_train_dict['validate_dict']
+        torch.save(best_checkpoint, best_checkpoint_name)
+        best_average_corr = best_checkpoint["best_avg_corr"]
         
     model.train()
     model.to(0)
@@ -173,8 +154,9 @@ def train_gcn(data_dir, train_data, val_data, checkpoint_dir, checkpoint_name, l
     # train model
     step = checkpoint_step
     for epoch in range(checkpoint_epoch, epochs):
-        losses = []
-        for batch in tqdm(train_dataloader):
+        y_true = np.zeros((len(train_dataset),), dtype=np.float32)
+        y_pred = np.zeros((len(train_dataset),), dtype=np.float32)
+        for batch_ind, batch in enumerate(train_dataloader):
             data_list = []
             pdbid_array = []
             for dataset in batch:
@@ -188,39 +170,38 @@ def train_gcn(data_dir, train_data, val_data, checkpoint_dir, checkpoint_name, l
                 y = torch.FloatTensor(affinity).view(-1, 1)
                 data = Data(x=x, edge_index=edge_index, edge_attr=edge_attr.view(-1, 1), y=y)
                 data_list.append(data)
-            if len(data_list) < 1:
-                print('empty batch, skipping to next batch')
-                continue
 
             optimizer.zero_grad()
             batch_data = [x for x in data_list]
             y_ = model(batch_data)
             y = torch.cat([x.y for x in data_list])
+            y_true[batch_ind*batch_size:batch_ind*batch_size+7] = y.cpu().float().data.numpy()[:,0]
+            y_pred[batch_ind*batch_size:batch_ind*batch_size+7] = y_.cpu().float().data.numpy()[:,0]
 
-            # compute loss
+            # compute loss and update parameters
             loss = criterion(y.float(), y_.cpu().float())
-            losses.append(loss.cpu().data.item())
             loss.backward()
-            y_true = y.cpu().data.numpy()
-            y_pred = y_.cpu().data.numpy()
-            # compute r^2
-            r2 = r2_score(y_true=y_true, y_pred=y_pred)
-            # compute mae
-            mae = mean_absolute_error(y_true=y_true, y_pred=y_pred)
-            # compute pearson correlation coefficient
-            pearsonr = stats.pearsonr(y_true.reshape(-1), y_pred.reshape(-1))
-            # compute spearman correlation coefficient
-            spearmanr = stats.spearmanr(y_true.reshape(-1), y_pred.reshape(-1))
-            # write training summary for each epoch
-            tqdm.write('epoch: {}\tloss:{:0.4f}\tr2: {:0.4f}\t pearsonr: {:0.4f}\tspearmanr: {:0.4f}\tmae: {:0.4f}\tpred stdev: {:0.4f}'
-                        '\t pred mean: {:0.4f}'.format(epoch, loss.cpu().data.numpy(), r2, float(pearsonr[0]),
-                        float(spearmanr[0]), float(mae), np.std(y_pred), np.mean(y_pred)))
-            
             optimizer.step()
             step += 1
-            if step%2500==0:
-                output.clear()
-               
+            print("[%d/%d-%d/%d] training loss: %.3f" % (epoch+1, epochs, batch_ind+1, len(train_dataset)//batch_size, loss))
+
+        r2 = r2_score(y_true=y_true, y_pred=y_pred)
+        mae = mean_absolute_error(y_true=y_true, y_pred=y_pred)
+        mse=mean_squared_error(y_true,y_pred)
+        epoch_train_losses.append(mse)
+        pearsonr = stats.pearsonr(y_true.reshape(-1), y_pred.reshape(-1))
+        spearmanr = stats.spearmanr(y_true.reshape(-1), y_pred.reshape(-1))
+
+        # write training summary for the epoch
+        print('epoch: {}\trmse:{:0.4f}\tr2: {:0.4f}\t pearsonr: {:0.4f}\tspearmanr: {:0.4f}\tmae: {:0.4f}\tpred'.format(epoch+1, mse**(1/2), r2, float(pearsonr[0]),
+                    float(spearmanr[0]), float(mae)))
+        
+        checkpoint_dict = checkpoint_model(model, val_dataloader, epoch+1, step)
+        if (checkpoint_dict["validate_dict"]["pearsonr"] + checkpoint_dict["validate_dict"]["spearmanr"])/2 > best_average_corr:
+          best_average_corr = (checkpoint_dict["validate_dict"]["pearsonr"] + checkpoint_dict["validate_dict"]["spearmanr"])/2
+          torch.save(checkpoint_dict, best_checkpoint_name)
+        torch.save(checkpoint_dict, checkpoint_name)
+          
     # learning curve and correlation plot
     fig, axs = plt.subplots(2)
     axs[0].plot(np.arange(1, epochs+1), np.array(epoch_train_losses), label = 'training')
