@@ -3,20 +3,21 @@ import numpy as np
 import seaborn as sns
 import os
 
-def create_cleaned_dataset(PDBbind_dataset_path, general_set_PDBs_path, refined_set_PDBs_path, plot = False):
+def create_cleaned_dataset(PDBbind_dataset_path, general_set_PDBs_path, refined_set_PDBs_path, output_name, plot = False):
   """
   Produces a csv file containing PDB id, binding affinity, and set (general/refined)
   
   Inputs:
   1) PDBbind_dataset_path: path to PDBbind dataset; dataset is included in github repository as 'PDBbind_2020_data.csv'
-  2) general_set_PDBs_path: path to PDBbind general set excluding refined PDBs
+  2) general_set_PDBs_path: path to PDBbind general set excluding refined set PDBs
   3) refined_set_PDBs_path: path to PDBbind refined set PDBs
-  4) plot = True will generate a plot of density as a function of binding affinity for general
+  4) output_name: name for the output csv file. Must end in .csv
+  5) plot = True will generate a plot of density as a function of binding affinity for general
      and refined sets
      
   Output:
   1) A cleaned csv containing PDB id, binding affinity, and set (general/refined):
-     'PDBbind_2020_data_cleaned.csv'
+     'output_name.csv'
   """
   
   # load dataset
@@ -53,10 +54,10 @@ def create_cleaned_dataset(PDBbind_dataset_path, general_set_PDBs_path, refined_
   data.loc[np.in1d(data['PDB ID'], list(refined_dict)), 'set'] = 'refined'
   
   # write out csv of cleaned dataset
-  data[['PDB ID', '-log(Kd/Ki)', 'set']].to_csv('PDBbind_2020_data_cleaned.csv', index=False)
+  data[['PDB ID', '-log(Kd/Ki)', 'set']].to_csv(output_name, index=False)
   
   # read in and view the cleaned dataset
-  display(pd.read_csv('PDBbind_2020_data_cleaned.csv'))
+  display(pd.read_csv(output_name))
   
   if plot == True:
     # plot affinity distributions for general and refined sets
