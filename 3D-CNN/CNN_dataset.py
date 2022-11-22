@@ -22,17 +22,12 @@ class CNN_Dataset(Dataset):
 		self.hdf.close()
 
 	def __len__(self):
-		count = len(self.data_info_list)
-		return count
+		return len(self.data_info_list)
 		
-	def get_data_info_list(self):
-		return self.data_info_list
-
 	def __getitem__(self, idx):
 		pdbid, affinity = self.data_info_list[idx]
-
 		data = self.hdf[pdbid][:]
 		x = torch.tensor(data)
-		x = x.permute(3,0,1,2)
+		x = x.permute(3,0,1,2)     # remove from git
 		y = torch.tensor(np.expand_dims(affinity, axis=0))
 		return x,y, pdbid
