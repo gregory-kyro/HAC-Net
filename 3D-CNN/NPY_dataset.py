@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 from torch.utils.data import Dataset
+
 """ Define a class to contain the data that will be included in the dataloader 
 sent to the Linear model """
 
