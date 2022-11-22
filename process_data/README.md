@@ -1,7 +1,7 @@
 ## Procedure for Processing and Preparing Data
 
 ### 1) Read in PDBbind dataset and create a csv file to be used to produce hdf5 files
-  - **parse_PDBbind_data.py**
+  - **parse_data.py**
         
 ### 2) Add hydrogens to pocket PDB files and convert to mol2 file type using Chimera 1.16, remove TIP3P atoms from mol2 files
   - **add_H_and_mol2_chimera.py**
