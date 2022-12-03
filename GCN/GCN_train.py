@@ -115,7 +115,7 @@ def train_gcn(train_data, val_data, checkpoint_name, best_checkpoint_name, load_
                 'y_true': y_true, 'y_pred': y_pred, 'best_average_corr': best_average_corr}
    
     # construct model
-    model = GeometricDataParallel(MP_GCN(in_channels=feature_size, gather_width=gather_width, prop_iter=prop_iter, dist_cutoff=dist_cutoff)).float()
+    model = GeometricDataParallel(GCN(in_channels=feature_size, gather_width=gather_width, prop_iter=prop_iter, dist_cutoff=dist_cutoff)).float()
 
     train_dataset = GCN_Dataset(data_file=train_data)
     val_dataset = GCN_Dataset(data_file=val_data)
