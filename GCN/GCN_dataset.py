@@ -4,7 +4,7 @@ from torch.utils.data import Dataset
 from sklearn.metrics import pairwise_distances
 
 ''' Define a class to contain the data that will be included in the dataloader 
-sent to the MP-GCN model '''
+sent to the GCN model '''
 
 class GCN_Dataset(Dataset):
   
