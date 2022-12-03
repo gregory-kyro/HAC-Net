@@ -6,12 +6,12 @@ from torch_geometric.nn import global_add_pool
 from torch_geometric.utils import add_self_loops
 from torch_geometric.nn.aggr import AttentionalAggregation
 
-''' Define full Message-Passing GCN class '''
+''' Define GCN class '''
 
-class MP_GCN(torch.nn.Module):
+class GCN(torch.nn.Module):
 
     def __init__(self, in_channels, gather_width=128, prop_iter=4, dist_cutoff=3.5):
-        super(MP_GCN, self).__init__()
+        super(GCN, self).__init__()
 
         #define distance cutoff
         self.dist_cutoff=torch.Tensor([dist_cutoff])
