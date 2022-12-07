@@ -19,7 +19,7 @@ prediction.
 
 ## Overview of Model
 
-![ezgif com-gif-maker (2)](https://user-images.githubusercontent.com/98780179/206187053-fcbf831c-fc33-43f1-9bc6-f26fcf211273.gif)
+![ezgif com-gif-maker (3)](https://user-images.githubusercontent.com/98780179/206187258-759db1c1-2561-42d4-8a94-3aaa4ba65791.gif)
 
 HAC-Net is a deep learning model composed of one ResNet-inspired 3D-CNN and two identically structured but independently trained GCNs. The model takes as the inputs protein and ligand structural files and outputs a prediction of the binding affinity between the inputs. While previous machine learning models for binding affinity prediction have focused primarily on working with either voxelized or graph-based representations of molecular complexes, recent work has demonstrated that combining models which operate on differently-structured data can increase performance compared to either one in isolation. Utilizing a similar approach, we designed a hybrid model consisting of one 3D-CNN and a two-model GCN ensemble. This combination achieves an optimal balance between the superior performance of our GCNs and the value of including a disparate feature extraction method provided by the 3D-CNN. Furthermore, the inclusion of two analogous GCNs mitigates noise due to the inherently-stochastic nature of the training process. Our hybrid model involves no additional trainings, and instead averages the predictions of the three independent models to generate a final output.
 
