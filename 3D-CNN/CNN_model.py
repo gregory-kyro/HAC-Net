@@ -1,6 +1,6 @@
 import torch.nn as nn
 
-'''Define a helper module for reshaping Tensors'''
+'''Define a helper module for reshaping tensors'''
 class View(nn.Module):
     def __init__(self, shape):
         super(View, self).__init__()
