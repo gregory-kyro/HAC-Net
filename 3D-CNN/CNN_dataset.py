@@ -28,6 +28,5 @@ class CNN_Dataset(Dataset):
 		pdbid, affinity = self.data_info_list[idx]
 		data = self.hdf[pdbid][:]
 		x = torch.tensor(data)
-		x = x.permute(3,0,1,2)     # remove from git
 		y = torch.tensor(np.expand_dims(affinity, axis=0))
 		return x,y, pdbid
