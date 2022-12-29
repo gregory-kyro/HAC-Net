@@ -25,7 +25,7 @@ def train_gcn(train_data, val_data, checkpoint_name, best_checkpoint_name, load_
     5) load_checkpoint_path: path to checkpoint file to load; default is None, i.e. training from scratch
     6) best_previous_checkpoint: path to the best checkpoint from the previous round of training (required); default is None, i.e. training from scratch
     Output:
-    1) checkpoint file, to load into testing function; saved as: checkpoint_dir + checkpoint_name
+    1) checkpoint file, to load into testing function; saved as: checkpoint_name
     '''
 
     # define train and validation hdf files
