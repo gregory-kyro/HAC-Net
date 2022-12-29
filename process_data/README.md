@@ -13,5 +13,7 @@
 ### 4) Create hdf file
   - **create_hdf.py**
   
-### 5) Create hdf files containing voxelized train, test, and validation data for use in the 3D-CNN
+### 5) Subdivide hdf file into train, validation, and test sets
+  
+### 6) Create hdf files containing voxelized train, test, and validation data for use in the 3D-CNN
   - **create_voxelized_hdf.py**
