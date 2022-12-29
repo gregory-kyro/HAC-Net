@@ -8,10 +8,10 @@ from torch.nn.parallel import DataParallel, DistributedDataParallel
 from torch.optim import RMSprop, lr_scheduler
 from torch.utils.data import DataLoader
 
+"""Define a function to train the fully-connected network with extracted features from 3D-CNN"""
+
 def train_Linear(input_train_data, input_val_data, checkpoint_dir, best_checkpoint_dir, learning_decay_iter = 150, load_previous_checkpoint = False, previous_checkpoint = None, best_previous_checkpoint = None):
     """
-    Define a function to train the Linear model
-
     Inputs:
     1) input_train_data: path to train.npy data
     2) input_val_data: path to val.npy data
@@ -24,7 +24,6 @@ def train_Linear(input_train_data, input_val_data, checkpoint_dir, best_checkpoi
     Outputs:
     1) checkpoint file from the endpoint of the training
     2) best checkpoint file, defined as that which maximizes the average of pearson and spearman correlations obtained from the validation data
-
     """
 
     # define parameters
@@ -51,10 +50,10 @@ def train_Linear(input_train_data, input_val_data, checkpoint_dir, best_checkpoi
         np.random.seed(int(0))
 
     # build training dataset variable
-    dataset = Dataset_npy(input_train_data)
+    dataset = Linear_Dataset(input_train_data)
 
     # build validation dataset variable
-    val_dataset = Dataset_npy(input_val_data)
+    val_dataset = Linear_Dataset(input_val_data)
 
     # check multi-gpus
     num_workers = 0
@@ -71,7 +70,6 @@ def train_Linear(input_train_data, input_val_data, checkpoint_dir, best_checkpoi
         # transfer to GPU
                 x_batch_cpu, y_batch_cpu = batch
                 x_batch, y_batch = x_batch_cpu.to(device), y_batch_cpu.to(device)
-        # apply gaussian filter
                 ypred_batch, _ = model(x_batch[:x_batch.shape[0]])
         # compute and print batch loss
                 loss = loss_fn(ypred_batch.cpu().float(), y_batch_cpu.float())
@@ -143,43 +141,43 @@ def train_Linear(input_train_data, input_val_data, checkpoint_dir, best_checkpoi
             loss.backward()
             optimizer.step()
             scheduler.step()
-                val_loss, average_corr = validate_model()
-                checkpoint_dict = {
-                    "model_state_dict": model.state_dict(),
-                    "optimizer_state_dict": optimizer.state_dict(),
-                    "loss": loss,
-                    "step": step,
-                    "epoch": epoch_ind,
-                    "epoch_val_losses": epoch_val_losses,
-                    "epoch_train_losses": epoch_train_losses,
-                    "epoch_avg_corr" : epoch_avg_corr,
-                    "best_avg_corr" : best_average_corr 
-                }
-                if (average_corr > best_average_corr):
-                    best_average_corr = average_corr
-                    checkpoint_dict["best_avg_corr"] = best_average_corr
-                    best_checkpoint_dict = checkpoint_dict
-                    torch.save(best_checkpoint_dict, best_checkpoint_dir)
-                torch.save(checkpoint_dict, checkpoint_dir)
-            step += 1
-        val_loss, average_corr = validate_model()
-        epoch_train_losses.append(np.mean(losses))
-        epoch_val_losses.append(val_loss)
-        epoch_avg_corr.append(average_corr)
-        checkpoint_dict = {
-                    "model_state_dict": model.state_dict(),
-                    "optimizer_state_dict": optimizer.state_dict(),
-                    "loss": loss,
-                    "step": step,
-                    "epoch": epoch_ind,
-                    "epoch_val_losses": epoch_val_losses,
-                    "epoch_train_losses": epoch_train_losses,
-                    "epoch_avg_corr" : epoch_avg_corr,
-                    "best_avg_corr": best_average_corr
-                }
-        if (average_corr > best_average_corr):
-            best_average_corr = average_corr
-            checkpoint_dict["best_avg_corr"] = best_average_corr
-            best_checkpoint_dict = checkpoint_dict
-            torch.save(best_checkpoint_dict, best_checkpoint_dir)
-        torch.save(checkpoint_dict, checkpoint_dir)
+            val_loss, average_corr = validate_model()
+            checkpoint_dict = {
+                "model_state_dict": model.state_dict(),
+                "optimizer_state_dict": optimizer.state_dict(),
+                "loss": loss,
+                "step": step,
+                "epoch": epoch_ind,
+                "epoch_val_losses": epoch_val_losses,
+                "epoch_train_losses": epoch_train_losses,
+                "epoch_avg_corr" : epoch_avg_corr,
+                "best_avg_corr" : best_average_corr 
+            }
+            if (average_corr > best_average_corr):
+                best_average_corr = average_corr
+                checkpoint_dict["best_avg_corr"] = best_average_corr
+                best_checkpoint_dict = checkpoint_dict
+                torch.save(best_checkpoint_dict, best_checkpoint_dir)
+            torch.save(checkpoint_dict, checkpoint_dir)
+        step += 1
+    val_loss, average_corr = validate_model()
+    epoch_train_losses.append(np.mean(losses))
+    epoch_val_losses.append(val_loss)
+    epoch_avg_corr.append(average_corr)
+    checkpoint_dict = {
+                "model_state_dict": model.state_dict(),
+                "optimizer_state_dict": optimizer.state_dict(),
+                "loss": loss,
+                "step": step,
+                "epoch": epoch_ind,
+                "epoch_val_losses": epoch_val_losses,
+                "epoch_train_losses": epoch_train_losses,
+                "epoch_avg_corr" : epoch_avg_corr,
+                "best_avg_corr": best_average_corr
+            }
+    if (average_corr > best_average_corr):
+        best_average_corr = average_corr
+        checkpoint_dict["best_avg_corr"] = best_average_corr
+        best_checkpoint_dict = checkpoint_dict
+        torch.save(best_checkpoint_dict, best_checkpoint_dir)
+    torch.save(checkpoint_dict, checkpoint_dir)
