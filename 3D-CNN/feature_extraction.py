@@ -6,16 +6,16 @@ import torch.nn as nn
 from torch.nn.parallel import DataParallel, DistributedDataParallel
 from torch.utils.data import DataLoader
 
-def savefeat_3dcnn(hdf_path, feature_length, checkpoint_path, npy_path):
+"""Define a function to extract flattened features from trained 3D-CNN"""
+
+def savefeat_3dcnn(hdf_path, checkpoint_path, npy_path):
 
     """
-    Define a function to test the 3D CNN model and save relevant features
     Inputs:
     1) hdf_path: path/to/file.hdf
     2) feature length: length of the flattened output features
     3) checkpoint_path: path/to/checkpoint/file.pt
     4) npy_path: path/to/save/features.npy
-
     Output:
     1) numpy file containing the saved features, with the last column being the true affinity value.
     """
@@ -34,14 +34,14 @@ def savefeat_3dcnn(hdf_path, feature_length, checkpoint_path, npy_path):
         device = torch.device("cpu")
     print(use_cuda, cuda_count, device)
     # load testing 
-     = CNN_(hdf_path)
+    dataset = CNN_Dataset(hdf_path)
     # check multi-gpus
     num_workers = 0
     if multi_gpus and cuda_count > 1:
         num_workers = cuda_count
     # initialize testing data loader
-    batch_count = len() // batch_size
-    dataloader = DataLoader(, batch_size=batch_size, shuffle=False, num_workers=num_workers, worker_init_fn=None)
+    batch_count = len(dataset) // batch_size
+    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers, worker_init_fn=None)
     # define model
     model = Model_3DCNN(use_cuda=use_cuda)
     if multi_gpus and cuda_count > 1:
@@ -55,10 +55,10 @@ def savefeat_3dcnn(hdf_path, feature_length, checkpoint_path, npy_path):
     model_state_dict = checkpoint.pop("model_state_dict")
     model.load_state_dict(model_state_dict, strict=False)
     # create empty arrays to hold predicted and true values
-    ytrue_arr = np.zeros((len(),), dtype=np.float32)
-    ypred_arr = np.zeros((len(),), dtype=np.float32)
-    flatfeat_arr = np.zeros((len(), feature_length + 1))
-    pdbid_arr = np.zeros((len(),), dtype=object)
+    ytrue_arr = np.zeros((len(dataset),), dtype=np.float32)
+    ypred_arr = np.zeros((len(dataset),), dtype=np.float32)
+    flatfeat_arr = np.zeros((len(dataset), 2048 + 1))
+    pdbid_arr = np.zeros((len(dataset),), dtype=object)
     pred_list = []
     model.eval()
     with torch.no_grad():
