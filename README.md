@@ -13,9 +13,10 @@ HAC-Net (Hybrid Attention-Based Convolutional Neural Network) is a novel deep le
 
 ## Important Files and Notebooks
 All of the:
-1) files used for training, validation and testing
-2) model parameter files 
-3) tutorial notebooks for training and testing HAC-Net
+1) HDF files used for training, validation and testing
+2) NPY files containing 3D-CNN extracted features
+3) PT files containing model parameters
+4) IPYNB files of tutorial notebooks for training and testing
 
 can be found at: https://drive.google.com/drive/folders/1yB2voUxwzhrQRh0JXnOD3BzY8ZQrbgUK?usp=sharing 
 
