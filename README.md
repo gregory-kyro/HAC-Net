@@ -18,7 +18,10 @@ All of the:
 3) PT files containing model parameters
 4) IPYNB files of tutorial notebooks for training and testing
 
-can be found at: https://drive.google.com/drive/folders/1yB2voUxwzhrQRh0JXnOD3BzY8ZQrbgUK?usp=sharing 
+can be found at: https://drive.google.com/drive/folders/1yB2voUxwzhrQRh0JXnOD3BzY8ZQrbgUK?usp=sharing
+
+## Associated Preprint
+https://arxiv.org/abs/2212.12440
 
 ## Contact
 Please feel free to reach out to us through either of the following emails if you have any questions or need any additional files:
