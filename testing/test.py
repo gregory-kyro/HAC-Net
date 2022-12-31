@@ -239,4 +239,4 @@ def test_hybrid(test, cnn_test_path, gcn0_test_path, gcn1_test_path, cnn_checkpo
     plt.yticks([0,3,6,9,12], fontsize=18)
     plt.xlim(0,14)
     plt.ylim(0,14)
-    plt.plot([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14], [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14], color='dimgray', linestyle='-',zorder=0, linewidth=2)
+    plt.plot(np.arange(0,15), np.arange(0,15), color='dimgray', linestyle='-',zorder=0, linewidth=2)
