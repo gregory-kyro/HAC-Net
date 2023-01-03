@@ -4,7 +4,7 @@ setup(
     name = 'HAC-Net',
     packages = ['HAC-Net'],
     version = '2.0',
-    description = 'a Hybrid Attention-based Convolutional neural Network for highly accurate protein-ligand binding affinity prediction',
+    description = 'Python package',
     author = 'Gregory W. Kyro',
     author_email = 'gregory.kyro@yale.edu',
     url = 'https://github.com/gregory-kyro/HAC-Net/tree/main/HAC-Net',
