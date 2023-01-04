@@ -40,13 +40,6 @@ jobs:
           # Install the package from setup.py
           python3 setup.py install
 
-      # Tests with unittest
-      #- name: Test with unittest
-      #  run: |
-      #    cd tests
-      #    python3 -m unittest discover
-      #    cd ..
-
       # Upload to TestPyPI
       - name: Build and Upload to TestPyPI
         run: |
