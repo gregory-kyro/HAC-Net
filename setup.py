@@ -1,8 +1,8 @@
 from distutils.core import setup
 
 setup(
-    name = 'HAC-Net',
-    packages = ['HAC-Net'],
+    name = 'HACNet',
+    packages = ['HACNet'],
     version = '1.3',
     description = 'Python package',
     author = 'Gregory W. Kyro',
