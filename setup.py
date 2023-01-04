@@ -3,7 +3,7 @@ from distutils.core import setup
 setup(
     name = 'HACNet',
     packages = ['HACNet'],
-    version = '1.0',
+    version = '1',
     description = 'Python package',
     author = 'Gregory W. Kyro',
     author_email = 'gregory.kyro@yale.edu',
