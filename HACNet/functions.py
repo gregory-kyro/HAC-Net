@@ -2,6 +2,7 @@ import h5py
 import numpy as np
 import math
 import torch
+from torch import nn as nn
 from torch.nn.parallel import DataParallel, DistributedDataParallel
 from torch_geometric.nn import DataParallel as GeometricDataParallel
 from torch_geometric.data import DataListLoader, Data
@@ -240,8 +241,8 @@ def predict(test, cnn_test_path, gcn0_test_path, gcn1_test_path, cnn_checkpoint_
     plt.plot(np.arange(0,15), np.arange(0,15), color='dimgray', linestyle='-',zorder=0, linewidth=2)
 
     
- ''' Define a class to contain the data that will be included in the dataloader 
-sent to the GCN model '''
+""" Define a class to contain the data that will be included in the dataloader 
+sent to the GCN model """
 
 class GCN_Dataset(Dataset):
   
@@ -275,7 +276,7 @@ class GCN_Dataset(Dataset):
         return self.data_dict[item]
 
 
-''' Define GCN class '''
+""" Define GCN class """
 
 class GCN(torch.nn.Module):
 
