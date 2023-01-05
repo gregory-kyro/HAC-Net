@@ -238,3 +238,138 @@ def predict(test, cnn_test_path, gcn0_test_path, gcn1_test_path, cnn_checkpoint_
     plt.xlim(0,14)
     plt.ylim(0,14)
     plt.plot(np.arange(0,15), np.arange(0,15), color='dimgray', linestyle='-',zorder=0, linewidth=2)
+
+    
+ ''' Define a class to contain the data that will be included in the dataloader 
+sent to the GCN model '''
+
+class GCN_Dataset(Dataset):
+  
+    def __init__(self, data_file):
+        super(GCN_Dataset, self).__init__()
+        self.data_file = data_file
+        self.data_dict = {}
+        self.data_list = []
+        
+        # retrieve PDB id's and affinities from hdf file
+        with h5py.File(data_file, 'r') as f:
+            for pdbid in f.keys():
+                affinity = np.asarray(f[pdbid].attrs['affinity']).reshape(1, -1)
+                self.data_list.append((pdbid, affinity))
+
+    def __len__(self):
+        return len(self.data_list)
+
+    def __getitem__(self, item):
+
+        if item in self.data_dict.keys():
+            return self.data_dict[item]
+
+        pdbid, affinity = self.data_list[item]
+        node_feats, coords = None, None
+
+        coords=h5py.File(self.data_file,'r')[pdbid][:,0:3]
+        dists=pairwise_distances(coords, metric='euclidean')
+        
+        self.data_dict[item] = (pdbid, dists)
+        return self.data_dict[item]
+
+
+''' Define GCN class '''
+
+class GCN(torch.nn.Module):
+
+    def __init__(self, in_channels, gather_width=128, prop_iter=4, dist_cutoff=3.5):
+        super(GCN, self).__init__()
+
+        #define distance cutoff
+        self.dist_cutoff=torch.Tensor([dist_cutoff])
+        if torch.cuda.is_available():
+            self.dist_cutoff = self.dist_cutoff.cuda()
+
+        #Attentional aggregation
+        self.gate_net = nn.Sequential(nn.Linear(in_channels, int(in_channels/2)), nn.Softsign(), nn.Linear(int(in_channels/2), int(in_channels/4)), nn.Softsign(), nn.Linear(int(in_channels/4),1))
+        self.attn_aggr = AttentionalAggregation(self.gate_net)
+        
+        #Gated Graph Neural Network
+        self.gate = GatedGraphConv(in_channels, prop_iter, aggregation=self.attn_aggr)
+
+        #Simple neural networks for use in asymmetric attentional aggregation
+        self.attn_net_i=nn.Sequential(nn.Linear(in_channels * 2, in_channels), nn.Softsign(),nn.Linear(in_channels, gather_width), nn.Softsign())
+        self.attn_net_j=nn.Sequential(nn.Linear(in_channels, gather_width), nn.Softsign())
+
+        #Final set of linear layers for making affinity prediction
+        self.output = nn.Sequential(nn.Linear(gather_width, int(gather_width / 1.5)), nn.ReLU(), nn.Linear(int(gather_width / 1.5), int(gather_width / 2)), nn.ReLU(), nn.Linear(int(gather_width / 2), 1))
+
+    def forward(self, data):
+
+        #Move data to GPU
+        if torch.cuda.is_available():
+            data.x = data.x.cuda()
+            data.edge_attr = data.edge_attr.cuda()
+            data.edge_index = data.edge_index.cuda()
+            data.batch = data.batch.cuda()
+
+        # allow nodes to propagate messages to themselves
+        data.edge_index, data.edge_attr = add_self_loops(data.edge_index, data.edge_attr.view(-1))
+
+        # restrict edges to the distance cutoff
+        row, col = data.edge_index
+        mask = data.edge_attr <= self.dist_cutoff
+        mask = mask.squeeze()
+        row, col, edge_feat = row[mask], col[mask], data.edge_attr[mask]
+        edge_index=torch.stack([row,col],dim=0)
+
+        # propagation
+        node_feat_0 = data.x
+        node_feat_1 = self.gate(node_feat_0, edge_index, edge_feat)
+        node_feat_attn = torch.nn.Softmax(dim=1)(self.attn_net_i(torch.cat([node_feat_1, node_feat_0], dim=1))) * self.attn_net_j(node_feat_0)
+
+        # globally sum features and apply linear layers
+        pool_x = global_add_pool(node_feat_attn, data.batch)
+        prediction = self.output(pool_x)
+
+        return prediction
+
+""" Define a class to contain the extracted 3D-CNN features that will be included in the dataloader 
+sent to the fully-connected network """
+
+class MLP_Dataset(Dataset):
+	def __init__(self, npy_path, feat_dim=22):
+		super(MLP_Dataset, self).__init__()
+		self.npy_path = npy_path
+		self.input_feat_array = np.load(npy_path, allow_pickle=True)[:,:-1].astype(np.float32)
+		self.input_affinity_array = np.load(npy_path, allow_pickle=True)[:,-1].astype(np.float32)
+		self.data_info_list = []
+		
+	def __len__(self):
+		count = self.input_feat_array.shape[0]
+		return count
+
+	def __getitem__(self, idx):
+		data, affinity = self.input_feat_array[idx], self.input_affinity_array[idx]
+
+		x = torch.tensor(data)
+		y = torch.tensor(np.expand_dims(affinity, axis=0))
+		return x,y
+
+
+""" Define fully-connected network class """
+class MLP(nn.Module):
+	def __init__(self, use_cuda=True):
+		super(MLP, self).__init__()     
+		self.use_cuda = use_cuda
+
+		self.fc1 = nn.Linear(2048, 100)
+		torch.nn.init.normal_(self.fc1.weight, 0, 1)
+		self.fc1_bn = nn.BatchNorm1d(num_features=100, affine=True, momentum=0.3).train()
+		self.fc2 = nn.Linear(100, 1)
+		torch.nn.init.normal_(self.fc2.weight, 0, 1)
+		self.relu = nn.ReLU()
+
+	def forward(self, x):
+		fc1_z = self.fc1(x)
+		fc1_y = self.relu(fc1_z)
+		fc1 = self.fc1_bn(fc1_y) if fc1_y.shape[0]>1 else fc1_y  #batchnorm train require more than 1 batch
+		fc2_z = self.fc2(fc1)
+		return fc2_z, fc1_z
