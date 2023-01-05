@@ -19,8 +19,8 @@ from torch._C import NoneType
 from torch.optim import Adam
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-import scipy as sp
 from scipy import stats
+from scipy.stats import pearsonr, spearmanr
 from sklearn.metrics import *
 from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error, pairwise_distances
 
