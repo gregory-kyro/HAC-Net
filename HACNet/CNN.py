@@ -313,7 +313,7 @@ def extract_features(hdf_path, checkpoint_path, npy_path):
     batch_count = len(dataset) // batch_size
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers, worker_init_fn=None)
     # define model
-    model = Model_3DCNN(use_cuda=use_cuda)
+    model = CNN(use_cuda=use_cuda)
     if multi_gpus and cuda_count > 1:
         model = nn.DataParallel(model)
     model.to(device)
