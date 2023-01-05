@@ -5,6 +5,7 @@ import torch
 from torch import nn as nn
 from torch.nn.parallel import DataParallel, DistributedDataParallel
 from torch_geometric.nn import DataParallel as GeometricDataParallel
+from torch_geometric.nn.aggr import AttentionalAggregation
 from torch_geometric.data import DataListLoader, Data
 from torch_geometric.utils import dense_to_sparse
 from torch.utils.data import Dataset, DataLoader
