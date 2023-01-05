@@ -21,7 +21,7 @@ class CNN_Dataset(Dataset):
 		self.feat_dim = feat_dim
 		self.hdf = h5py.File(self.hdf_path, 'r')
 		self.data_info_list = []
-    # append PDB id and affinity label to data_info_list
+   	# append PDB id and affinity label to data_info_list
 		for pdbid in self.hdf.keys():
 			affinity = float(self.hdf[pdbid].attrs['affinity'])
 			self.data_info_list.append([pdbid, affinity])
@@ -50,7 +50,7 @@ class View(nn.Module):
         return x.view(*self.shape)
 
 ''' Define 3D-CNN model '''
-class Model_3DCNN(nn.Module):
+class CNN(nn.Module):
 
   def __conv_filter__(self, in_channels, out_channels, kernel_size, stride, padding):
     conv_filter = nn.Sequential(nn.Conv3d(in_channels, out_channels, kernel_size=kernel_size, stride=stride, padding=padding, bias=True), nn.ReLU(inplace=True), nn.BatchNorm3d(out_channels))
@@ -62,7 +62,7 @@ class Model_3DCNN(nn.Module):
     return se_block
 
   def __init__(self, feat_dim=19, use_cuda=True):
-    super(Model_3DCNN, self).__init__()     
+    super(CNN, self).__init__()     
     self.feat_dim = feat_dim
     self.use_cuda = use_cuda
     
@@ -123,7 +123,7 @@ class Model_3DCNN(nn.Module):
     return linear2_z, flatten
 
 
-def train_3dcnn(train_hdf, val_hdf, checkpoint_dir, best_checkpoint_dir, previous_checkpoint = None, best_previous_checkpoint=None):
+def train_CNN(train_hdf, val_hdf, checkpoint_dir, best_checkpoint_dir, previous_checkpoint = None, best_previous_checkpoint=None):
     '''
     Define a function to train the 3D-CNN model
     Inputs:
@@ -159,7 +159,7 @@ def train_3dcnn(train_hdf, val_hdf, checkpoint_dir, best_checkpoint_dir, previou
     val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
 
     # define model and helper functions
-    model = Model_3DCNN(use_cuda=use_cuda)
+    model = CNN(use_cuda=use_cuda)
     model.to(device)
     loss_func = nn.MSELoss().float()
     optimizer = RMSprop(model.parameters(), lr=learning_rate)
