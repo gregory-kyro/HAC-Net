@@ -51,7 +51,7 @@ class MLP(nn.Module):
 	def forward(self, x):
 		fc1_z = self.fc1(x)
 		fc1_y = self.relu(fc1_z)
-		fc1 = self.fc1_bn(fc1_d) if fc1_d.shape[0]>1 else fc1_d  #batchnorm train require more than 1 batch
+		fc1 = self.fc1_bn(fc1_y) if fc1_y.shape[0]>1 else fc1_y  #batchnorm train require more than 1 batch
 		fc2_z = self.fc2(fc1)
 		return fc2_z, fc1_z
 
