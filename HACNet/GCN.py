@@ -111,7 +111,7 @@ class GCN(torch.nn.Module):
 
 
 ''' Define train function for MP-GCN'''
-def train_gcn(train_data, val_data, checkpoint_name, best_checkpoint_name, load_checkpoint_path = None, best_previous_checkpoint=None):
+def train_GCN(train_data, val_data, checkpoint_name, best_checkpoint_name, load_checkpoint_path = None, best_previous_checkpoint=None):
 
     '''
     Inputs:
