@@ -207,7 +207,7 @@ def train_MLP(input_train_data, input_val_data, checkpoint_dir, best_checkpoint_
                 best_checkpoint_dict = checkpoint_dict
                 torch.save(best_checkpoint_dict, best_checkpoint_dir)
             torch.save(checkpoint_dict, checkpoint_dir)
-        step += 1
+	step += 1
 	print('Epoch: ', step)
     val_loss, average_corr = validate_model()
     epoch_train_losses.append(np.mean(losses))
