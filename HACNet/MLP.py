@@ -141,7 +141,7 @@ def train_MLP(input_train_data, input_val_data, checkpoint_dir, best_checkpoint_
     val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers, worker_init_fn=None)
 
     # define model
-    model = MLP(use_cuda=use_cuda, verbose=verbose)
+    model = MLP(use_cuda=use_cuda)
     if multi_gpus and cuda_count > 1:
         model = nn.DataParallel(model)
     model.to(device)
