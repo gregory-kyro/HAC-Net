@@ -16,6 +16,7 @@ from torch.utils.data import DataLoader
 sent to the fully-connected network """
 
 class MLP_Dataset(Dataset):
+
 	def __init__(self, npy_path, feat_dim=22):
 		super(MLP_Dataset, self).__init__()
 		self.npy_path = npy_path
@@ -29,18 +30,18 @@ class MLP_Dataset(Dataset):
 
 	def __getitem__(self, idx):
 		data, affinity = self.input_feat_array[idx], self.input_affinity_array[idx]
-
 		x = torch.tensor(data)
 		y = torch.tensor(np.expand_dims(affinity, axis=0))
 		return x,y
 
 
 """ Define fully-connected network class """
+
 class MLP(nn.Module):
+
 	def __init__(self, use_cuda=True):
 		super(MLP, self).__init__()     
 		self.use_cuda = use_cuda
-
 		self.fc1 = nn.Linear(2048, 100)
 		torch.nn.init.normal_(self.fc1.weight, 0, 1)
 		self.fc1_bn = nn.BatchNorm1d(num_features=100, affine=True, momentum=0.3).train()
@@ -51,20 +52,21 @@ class MLP(nn.Module):
 	def forward(self, x):
 		fc1_z = self.fc1(x)
 		fc1_y = self.relu(fc1_z)
-		fc1 = self.fc1_bn(fc1_y) if fc1_y.shape[0]>1 else fc1_y  #batchnorm train require more than 1 batch
+		fc1 = self.fc1_bn(fc1_y) if fc1_y.shape[0]>1 else fc1_y
 		fc2_z = self.fc2(fc1)
 		return fc2_z, fc1_z
 
 
-"""Define a function to train the fully-connected network with extracted features from 3D-CNN"""
+""" Define a function to train the fully-connected network with extracted features from 3D-CNN """
 
-def train_MLP(input_train_data, input_val_data, checkpoint_dir, best_checkpoint_dir, learning_decay_iter = 150, load_previous_checkpoint = False, previous_checkpoint = None, best_previous_checkpoint = None):
+def train_MLP(training_data, validation_data, checkpoint_path, best_checkpoint_path, learning_decay_iter = 150, load_previous_checkpoint = False, previous_checkpoint = None, best_previous_checkpoint = None):
+   
     """
     Inputs:
-    1) input_train_data: path to train.npy data
-    2) input_val_data: path to val.npy data
-    3) checkpoint_dir: path to save checkpoint file: 'path/to/file.pt'
-    4) best_checkpoint_dir: path to save best checkpoint file: 'path/to/file.pt'
+    1) training_data: path to train.npy data
+    2) validation_data: path to val.npy data
+    3) checkpoint_path: path to save checkpoint file: 'path/to/file.pt'
+    4) best_checkpoint_path: path to save best checkpoint file: 'path/to/file.pt'
     5) learning_decay_iter: frequency at which the learning rate is decreased by a multiplicative factor of decay_rate; set to 150 by default
     6) load_previous_checkpoint: boolean variable indicating whether or not training should be started from an existing checkpoint. False by default
     7) previous_checkpoint: path to the checkpoint at which training should be started. None by default.
@@ -98,10 +100,10 @@ def train_MLP(input_train_data, input_val_data, checkpoint_dir, best_checkpoint_
         np.random.seed(int(0))
 
     # build training dataset variable
-    dataset = MLP_Dataset(input_train_data)
+    dataset = MLP_Dataset(training_data)
 
     # build validation dataset variable
-    val_dataset = MLP_Dataset(input_val_data)
+    val_dataset = MLP_Dataset(validation_data)
 
     # check multi-gpus
     num_workers = 0
@@ -205,8 +207,8 @@ def train_MLP(input_train_data, input_val_data, checkpoint_dir, best_checkpoint_
                 best_average_corr = average_corr
                 checkpoint_dict["best_avg_corr"] = best_average_corr
                 best_checkpoint_dict = checkpoint_dict
-                torch.save(best_checkpoint_dict, best_checkpoint_dir)
-            torch.save(checkpoint_dict, checkpoint_dir)
+                torch.save(best_checkpoint_dict, best_checkpoint_path)
+            torch.save(checkpoint_dict, checkpoint_path)
         step += 1
         print('Epoch: ', step)
     val_loss, average_corr = validate_model()
@@ -228,5 +230,5 @@ def train_MLP(input_train_data, input_val_data, checkpoint_dir, best_checkpoint_
         best_average_corr = average_corr
         checkpoint_dict["best_avg_corr"] = best_average_corr
         best_checkpoint_dict = checkpoint_dict
-        torch.save(best_checkpoint_dict, best_checkpoint_dir)
-    torch.save(checkpoint_dict, checkpoint_dir)
+        torch.save(best_checkpoint_dict, best_checkpoint_path)
+    torch.save(checkpoint_dict, checkpoint_path)
