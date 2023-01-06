@@ -18,8 +18,8 @@ import random
 from scipy import stats
 import matplotlib.pyplot as plt
 
-''' Define a class to contain the data that will be included in the dataloader 
-sent to the GCN model '''
+""" Define a class to contain the data that will be included in the dataloader 
+sent to the GCN model """
 
 class GCN_Dataset(Dataset):
   
@@ -39,49 +39,45 @@ class GCN_Dataset(Dataset):
         return len(self.data_list)
 
     def __getitem__(self, item):
-
         if item in self.data_dict.keys():
             return self.data_dict[item]
-
         pdbid, affinity = self.data_list[item]
         node_feats, coords = None, None
-
         coords=h5py.File(self.data_file,'r')[pdbid][:,0:3]
         dists=pairwise_distances(coords, metric='euclidean')
-        
         self.data_dict[item] = (pdbid, dists)
         return self.data_dict[item]
 
 
-''' Define GCN class '''
+""" Define GCN class """
 
 class GCN(torch.nn.Module):
 
     def __init__(self, in_channels, gather_width=128, prop_iter=4, dist_cutoff=3.5):
         super(GCN, self).__init__()
 
-        #define distance cutoff
+        # define distance cutoff
         self.dist_cutoff=torch.Tensor([dist_cutoff])
         if torch.cuda.is_available():
             self.dist_cutoff = self.dist_cutoff.cuda()
 
-        #Attentional aggregation
+        # attentional aggregation
         self.gate_net = nn.Sequential(nn.Linear(in_channels, int(in_channels/2)), nn.Softsign(), nn.Linear(int(in_channels/2), int(in_channels/4)), nn.Softsign(), nn.Linear(int(in_channels/4),1))
         self.attn_aggr = AttentionalAggregation(self.gate_net)
         
-        #Gated Graph Neural Network
+        # Gated Graph Neural Network
         self.gate = GatedGraphConv(in_channels, prop_iter, aggregation=self.attn_aggr)
 
-        #Simple neural networks for use in asymmetric attentional aggregation
+        # simple neural networks for use in asymmetric attentional aggregation
         self.attn_net_i=nn.Sequential(nn.Linear(in_channels * 2, in_channels), nn.Softsign(),nn.Linear(in_channels, gather_width), nn.Softsign())
         self.attn_net_j=nn.Sequential(nn.Linear(in_channels, gather_width), nn.Softsign())
 
-        #Final set of linear layers for making affinity prediction
+        # final set of linear layers for making affinity prediction
         self.output = nn.Sequential(nn.Linear(gather_width, int(gather_width / 1.5)), nn.ReLU(), nn.Linear(int(gather_width / 1.5), int(gather_width / 2)), nn.ReLU(), nn.Linear(int(gather_width / 2), 1))
 
     def forward(self, data):
 
-        #Move data to GPU
+        # move data to GPU
         if torch.cuda.is_available():
             data.x = data.x.cuda()
             data.edge_attr = data.edge_attr.cuda()
@@ -110,24 +106,25 @@ class GCN(torch.nn.Module):
         return prediction
 
 
-''' Define train function for MP-GCN'''
-def train_GCN(train_data, val_data, checkpoint_name, best_checkpoint_name, load_checkpoint_path = None, best_previous_checkpoint=None):
+""" Define train function for GCN """
 
-    '''
+def train_GCN(training_data, validation_data, checkpoint_path, best_checkpoint_path, load_checkpoint_path = None, best_previous_checkpoint=None):
+
+    """
     Inputs:
-    1) train_data: training hdf file name
-    2) val_data: validation hdf file name
-    3) checkpoint_name: path to save checkpoint_name.pt
-    4) best_checkpoint_name: path to save best_checkpoint_name.pt
+    1) training_data: training hdf file name
+    2) validation_data: validation hdf file name
+    3) checkpoint_path: path to save checkpoint_path.pt
+    4) best_checkpoint_path: path to save best_checkpoint_path.pt
     5) load_checkpoint_path: path to checkpoint file to load; default is None, i.e. training from scratch
     6) best_previous_checkpoint: path to the best checkpoint from the previous round of training (required); default is None, i.e. training from scratch
     Output:
-    1) checkpoint file, to load into testing function; saved as: checkpoint_name
-    '''
+    1) checkpoint file, to load into testing function; saved as: checkpoint_path
+    """
 
     # define train and validation hdf files
-    train_data_hdf = h5py.File(train_data, 'r')
-    val_data_hdf = h5py.File(val_data, 'r')
+    training_data_hdf = h5py.File(training_data, 'r')
+    validation_data_hdf = h5py.File(validation_data, 'r')
 
     # define parameters
     epochs = 300                   # number of training epochs
@@ -163,23 +160,23 @@ def train_GCN(train_data, val_data, checkpoint_name, best_checkpoint_name, load_
         model.train()
         checkpoint_dict = {'model_state_dict': model.state_dict(), 'step': step, 'epoch': epoch, 'validate_dict': validate_dict,
                            'epoch_train_losses': epoch_train_losses, 'epoch_val_losses': epoch_val_losses, 'epoch_avg_corr': epoch_avg_corr, 'best_avg_corr': best_average_corr}
-        torch.save(checkpoint_dict, checkpoint_name)
+        torch.save(checkpoint_dict, checkpoint_path)
         return checkpoint_dict
 
     # define function to perform validation
-    def validate(model, val_dataloader):
+    def validate(model, validation_dataloader):
         # initialize
         model.eval()
-        y_true = np.zeros((len(val_dataset),), dtype=np.float32)
-        y_pred = np.zeros((len(val_dataset),), dtype=np.float32)
+        y_true = np.zeros((len(validation_dataset),), dtype=np.float32)
+        y_pred = np.zeros((len(validation_dataset),), dtype=np.float32)
         # validation
-        for batch_ind, batch in enumerate(val_dataloader):
+        for batch_ind, batch in enumerate(validation_dataloader):
             data_list = []
             for dataset in batch:
                 pdbid = dataset[0]
-                affinity = val_data_hdf[pdbid].attrs['affinity'].reshape(1,-1)
-                vdw_radii = (val_data_hdf[pdbid].attrs['van_der_waals'].reshape(-1, 1))
-                node_feats = np.concatenate([vdw_radii, val_data_hdf[pdbid][:, 3:22]], axis=1)
+                affinity = validation_data_hdf[pdbid].attrs['affinity'].reshape(1,-1)
+                vdw_radii = (validation_data_hdf[pdbid].attrs['van_der_waals'].reshape(-1, 1))
+                node_feats = np.concatenate([vdw_radii, validation_data_hdf[pdbid][:, 3:22]], axis=1)
                 edge_index, edge_attr = dense_to_sparse(torch.from_numpy(dataset[1]).float())
                 x = torch.from_numpy(node_feats).float()
                 y = torch.FloatTensor(affinity).view(-1, 1)
@@ -191,7 +188,7 @@ def train_GCN(train_data, val_data, checkpoint_name, best_checkpoint_name, load_
             y_true[batch_ind*batch_size:batch_ind*batch_size+7] = y.cpu().float().data.numpy()[:,0]
             y_pred[batch_ind*batch_size:batch_ind*batch_size+7] = y_.cpu().float().data.numpy()[:,0]
             loss = criterion(y.float(), y_.cpu().float())
-            print('[%d/%d-%d/%d] validation loss: %.3f' % (epoch+1, epochs, batch_ind+1, len(val_dataset)//batch_size, loss))
+            print('[%d/%d-%d/%d] validation loss: %.3f' % (epoch+1, epochs, batch_ind+1, len(validation_dataset)//batch_size, loss))
 
         # compute r^2
         r2 = r2_score(y_true=y_true, y_pred=y_pred)
@@ -214,13 +211,13 @@ def train_GCN(train_data, val_data, checkpoint_name, best_checkpoint_name, load_
     # construct model
     model = GeometricDataParallel(GCN(in_channels=feature_size, gather_width=gather_width, prop_iter=prop_iter, dist_cutoff=dist_cutoff)).float()
 
-    train_dataset = GCN_Dataset(data_file=train_data)
-    val_dataset = GCN_Dataset(data_file=val_data)
+    training_dataset = GCN_Dataset(data_file=training_data)
+    validation_dataset = GCN_Dataset(data_file=validation_data)
         
     # construct training and validation dataloaders to be fed to model
-    batch_count=len(train_dataset)
-    train_dataloader = DataListLoader(train_dataset, batch_size=batch_size, shuffle=True, worker_init_fn=worker_init_fn, drop_last=True)
-    val_dataloader = DataListLoader(val_dataset, batch_size=batch_size, shuffle=False, worker_init_fn=worker_init_fn, drop_last=True)
+    batch_count=len(training_dataset)
+    training_dataloader = DataListLoader(training_dataset, batch_size=batch_size, shuffle=True, worker_init_fn=worker_init_fn, drop_last=True)
+    validation_dataloader = DataListLoader(validation_dataset, batch_size=batch_size, shuffle=False, worker_init_fn=worker_init_fn, drop_last=True)
 
     # load checkpoint file
     if load_checkpoint_path != None:
@@ -237,7 +234,7 @@ def train_GCN(train_data, val_data, checkpoint_name, best_checkpoint_name, load_
         epoch_val_losses = model_train_dict['epoch_val_losses']
         epoch_avg_corr = model_train_dict['epoch_avg_corr']
         val_dict = model_train_dict['validate_dict']
-        torch.save(best_checkpoint, best_checkpoint_name)
+        torch.save(best_checkpoint, best_checkpoint_path)
         best_average_corr = best_checkpoint["best_avg_corr"]
         
     model.train()
@@ -245,23 +242,24 @@ def train_GCN(train_data, val_data, checkpoint_name, best_checkpoint_name, load_
     
     # set loss as MSE
     criterion = nn.MSELoss().float()
+    
     # set Adam optimizer
     optimizer = Adam(model.parameters(), lr=learning_rate) 
     
     # train model
     step = checkpoint_step
     for epoch in range(checkpoint_epoch, epochs):
-        y_true = np.zeros((len(train_dataset),), dtype=np.float32)
-        y_pred = np.zeros((len(train_dataset),), dtype=np.float32)
-        for batch_ind, batch in enumerate(train_dataloader):
+        y_true = np.zeros((len(training_dataset),), dtype=np.float32)
+        y_pred = np.zeros((len(training_dataset),), dtype=np.float32)
+        for batch_ind, batch in enumerate(training_dataloader):
             data_list = []
             pdbid_array = []
             for dataset in batch:
                 pdbid = dataset[0]
                 pdbid_array.append(pdbid)
-                affinity = train_data_hdf[pdbid].attrs['affinity'].reshape(1,-1)
-                vdw_radii = (train_data_hdf[pdbid].attrs['van_der_waals'].reshape(-1, 1))
-                node_feats = np.concatenate([vdw_radii, train_data_hdf[pdbid][:, 3:22]], axis=1)
+                affinity = training_data_hdf[pdbid].attrs['affinity'].reshape(1,-1)
+                vdw_radii = (training_data_hdf[pdbid].attrs['van_der_waals'].reshape(-1, 1))
+                node_feats = np.concatenate([vdw_radii, training_data_hdf[pdbid][:, 3:22]], axis=1)
                 edge_index, edge_attr = dense_to_sparse(torch.from_numpy(dataset[1]).float()) 
                 x = torch.from_numpy(node_feats).float()
                 y = torch.FloatTensor(affinity).view(-1, 1)
@@ -280,7 +278,7 @@ def train_GCN(train_data, val_data, checkpoint_name, best_checkpoint_name, load_
             loss.backward()
             optimizer.step()
             step += 1
-            print("[%d/%d-%d/%d] training loss: %.3f" % (epoch+1, epochs, batch_ind+1, len(train_dataset)//batch_size, loss))
+            print("[%d/%d-%d/%d] training loss: %.3f" % (epoch+1, epochs, batch_ind+1, len(training_dataset)//batch_size, loss))
 
         r2 = r2_score(y_true=y_true, y_pred=y_pred)
         mae = mean_absolute_error(y_true=y_true, y_pred=y_pred)
@@ -293,11 +291,11 @@ def train_GCN(train_data, val_data, checkpoint_name, best_checkpoint_name, load_
         print('epoch: {}\trmse:{:0.4f}\tr2: {:0.4f}\t pearsonr: {:0.4f}\tspearmanr: {:0.4f}\tmae: {:0.4f}\tpred'.format(epoch+1, mse**(1/2), r2, float(pearsonr[0]),
                     float(spearmanr[0]), float(mae)))
         
-        checkpoint_dict = checkpoint_model(model, val_dataloader, epoch+1, step)
+        checkpoint_dict = checkpoint_model(model, validation_dataloader, epoch+1, step)
         if (checkpoint_dict["validate_dict"]["pearsonr"] + checkpoint_dict["validate_dict"]["spearmanr"])/2 > best_average_corr:
           best_average_corr = (checkpoint_dict["validate_dict"]["pearsonr"] + checkpoint_dict["validate_dict"]["spearmanr"])/2
-          torch.save(checkpoint_dict, best_checkpoint_name)
-        torch.save(checkpoint_dict, checkpoint_name)
+          torch.save(checkpoint_dict, best_checkpoint_path)
+        torch.save(checkpoint_dict, checkpoint_path)
           
     # learning curve and correlation plot
     fig, axs = plt.subplots(2)
@@ -312,5 +310,5 @@ def train_GCN(train_data, val_data, checkpoint_name, best_checkpoint_name, load_
     axs[1].set_ylim(0,1)
     plt.show()
   
-    train_data_hdf.close()
-    val_data_hdf.close()
+    training_data_hdf.close()
+    validation_data_hdf.close()
