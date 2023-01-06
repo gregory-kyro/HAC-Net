@@ -11,27 +11,27 @@ from scipy import stats
 from sklearn import metrics
 import matplotlib.pyplot as plt
 
-''' Define a class to contain the data that will be included in the dataloader 
-sent to the 3D-CNN '''
+""" Define a class to contain the data that will be included in the dataloader 
+sent to the 3D-CNN """
 class CNN_Dataset(Dataset):
-
+	
 	def __init__(self, hdf_path, feat_dim=22):
 		super(CNN_Dataset, self).__init__()
 		self.hdf_path = hdf_path
 		self.feat_dim = feat_dim
 		self.hdf = h5py.File(self.hdf_path, 'r')
 		self.data_info_list = []
-   	# append PDB id and affinity label to data_info_list
+   		# append PDB id and affinity label to data_info_list
 		for pdbid in self.hdf.keys():
 			affinity = float(self.hdf[pdbid].attrs['affinity'])
 			self.data_info_list.append([pdbid, affinity])
-
+			
 	def close(self):
 		self.hdf.close()
-
+		
 	def __len__(self):
 		return len(self.data_info_list)
-		
+	
 	def __getitem__(self, idx):
 		pdbid, affinity = self.data_info_list[idx]
 		data = self.hdf[pdbid][:]
@@ -39,19 +39,19 @@ class CNN_Dataset(Dataset):
 		y = torch.tensor(np.expand_dims(affinity, axis=0))
 		return x,y, pdbid
 
-
-'''Define a helper module for reshaping tensors'''
+""" Define a helper module for reshaping tensors """
 class View(nn.Module):
+	
     def __init__(self, shape):
         super(View, self).__init__()
         self.shape = shape
-
+	
     def forward(self, x):
         return x.view(*self.shape)
 
-''' Define 3D-CNN model '''
+""" Define 3D-CNN architecture """
 class CNN(nn.Module):
-
+	
   def __conv_filter__(self, in_channels, out_channels, kernel_size, stride, padding):
     conv_filter = nn.Sequential(nn.Conv3d(in_channels, out_channels, kernel_size=kernel_size, stride=stride, padding=padding, bias=True), nn.ReLU(inplace=True), nn.BatchNorm3d(out_channels))
     return conv_filter
@@ -65,8 +65,7 @@ class CNN(nn.Module):
     super(CNN, self).__init__()     
     self.feat_dim = feat_dim
     self.use_cuda = use_cuda
-    
-    #Initialize model components
+    # initialize architecture components
     self.conv_block1=self.__conv_filter__(self.feat_dim,64,9,2,3)
     self.se_block1=self.__se_block__(64)
     self.res_block1 = self.__conv_filter__(64, 64, 7, 1, 3)
@@ -101,7 +100,7 @@ class CNN(nn.Module):
     squeeze2=self.se_block2(conv2)
     se2=conv2*squeeze2.expand_as(conv2) 
 
-    # Pooling layer
+    # pooling layer
     pool2 = self.max_pool(se2)
 
     # SE block 3
@@ -109,34 +108,34 @@ class CNN(nn.Module):
     squeeze3=self.se_block3(conv3)
     se3=conv3*squeeze3.expand_as(conv3) 
 
-    # Flatten
+    # flatten
     flatten = se3.view(se3.size(0), -1)
 
-    # Linear layer 1
+    # linear layer 1
     linear1_z = self.linear1(flatten)
     linear1_y = self.relu(linear1_z)
     linear1 = self.linear1_bn(linear1_y) if linear1_y.shape[0]>1 else linear1_y
 
-    # Linear layer 2
+    # linear layer 2
     linear2_z = self.linear2(linear1)
 
     return linear2_z, flatten
 
 
-def train_CNN(train_hdf, val_hdf, checkpoint_dir, best_checkpoint_dir, previous_checkpoint = None, best_previous_checkpoint=None):
-    '''
+def train_CNN(training_data, validation_data, checkpoint_path, best_checkpoint_path, previous_checkpoint = None, best_previous_checkpoint=None):
+    """
     Define a function to train the 3D-CNN model
     Inputs:
-    1) train_hdf: training hdf file name
-    2) val_hdf: validation hdf file name
-    3) checkpoint_dir: path to save checkpoint file: 'path/to/file.pt'
-    4) best_checkpoint_dir: path to save best checkpoint file: 'path/to/file.pt'
+    1) training_data: training hdf file name
+    2) validation_data: validation hdf file name
+    3) checkpoint_path: path to save checkpoint file: 'path/to/file.pt'
+    4) best_checkpoint_path: path to save best checkpoint file: 'path/to/file.pt'
     5) previous_checkpoint: path to the checkpoint at which training should be started; default = None, i.e. training from scratch
     6) best_previous_checkpoint: path to the best checkpoint from the previous round of training (required); default = None, i.e. training from scratch
     Output:
     1) checkpoint file from the endpoint of the training
     2) checkpoint file from the epoch with highest average correlation on validation
-    '''
+    """
 
     # define parameters
     batch_size = 50
@@ -150,8 +149,8 @@ def train_CNN(train_hdf, val_hdf, checkpoint_dir, best_checkpoint_dir, previous_
     torch.cuda.set_device(0)
 
     # initialize Datasets
-    dataset = CNN_Dataset(train_hdf)
-    val_dataset = CNN_Dataset(val_hdf)
+    dataset = CNN_Dataset(training_data)
+    val_dataset = CNN_Dataset(validation_data)
 
     # initialize Dataloaders
     batch_count = len(dataset.data_info_list) // batch_size + 1
@@ -174,7 +173,7 @@ def train_CNN(train_hdf, val_hdf, checkpoint_dir, best_checkpoint_dir, previous_
     #load previous checkpoint if applicable
     if previous_checkpoint!=None:
         best_checkpoint = torch.load(best_previous_checkpoint, map_location = device)
-        torch.save(best_checkpoint, best_checkpoint_dir)
+        torch.save(best_checkpoint, best_checkpoint_path)
         best_average_corr = best_checkpoint["best_avg_corr"]
         checkpoint = torch.load(previous_checkpoint, map_location=device)
         model_state_dict = checkpoint.pop('model_state_dict')
@@ -255,10 +254,10 @@ def train_CNN(train_hdf, val_hdf, checkpoint_dir, best_checkpoint_dir, previous_
         if (average_corr > best_average_corr):
             best_average_corr = average_corr
             checkpoint_dict["best_avg_corr"] = best_average_corr
-            torch.save(checkpoint_dict, best_checkpoint_dir)
-            print("best checkpoint saved: %s" % best_checkpoint_dir)
-        torch.save(checkpoint_dict, checkpoint_dir)
-        print('checkpoint saved: %s' % checkpoint_dir)
+            torch.save(checkpoint_dict, best_checkpoint_path)
+            print("best checkpoint saved: %s" % best_checkpoint_path)
+        torch.save(checkpoint_dict, checkpoint_path)
+        print('checkpoint saved: %s' % checkpoint_path)
     
     # create learning curve and correlation plot
     fig, axs = plt.subplots(2)
@@ -277,15 +276,15 @@ def train_CNN(train_hdf, val_hdf, checkpoint_dir, best_checkpoint_dir, previous_
     dataset.close()
     val_dataset.close()
 
-"""Define a function to extract flattened features from trained 3D-CNN"""
-def extract_features(hdf_path, checkpoint_path, npy_path):
+""" Define a function to extract flattened features from trained 3D-CNN """
+def extract_features(input, checkpoint_path, save_path):
 
     """
     Inputs:
-    1) hdf_path: path/to/file.hdf
+    1) input: path/to/file.hdf
     2) feature length: length of the flattened output features
     3) checkpoint_path: path/to/checkpoint/file.pt
-    4) npy_path: path/to/save/features.npy
+    4) save_path: path/to/save/features.npy
     Output:
     1) numpy file containing the saved features, with the last column being the true affinity value.
     """
@@ -304,7 +303,7 @@ def extract_features(hdf_path, checkpoint_path, npy_path):
         device = torch.device("cpu")
     print(use_cuda, cuda_count, device)
     # load testing 
-    dataset = CNN_Dataset(hdf_path)
+    dataset = CNN_Dataset(input)
     # check multi-gpus
     num_workers = 0
     if multi_gpus and cuda_count > 1:
@@ -347,4 +346,4 @@ def extract_features(hdf_path, checkpoint_path, npy_path):
             flatfeat_arr[batch_ind*batch_size:batch_ind*batch_size+bsize, :-1] = flatfeat
             pdbid_arr[batch_ind*batch_size:batch_ind*batch_size+bsize] = pdbid_batch
     flatfeat_arr[:,-1] = ytrue_arr
-    np.save(npy_path, flatfeat_arr)
+    np.save(save_path, flatfeat_arr)
