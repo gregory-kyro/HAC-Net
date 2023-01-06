@@ -24,12 +24,14 @@ from scipy.stats import pearsonr, spearmanr
 from sklearn.metrics import *
 from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error, pairwise_distances
 
-def predict(test, cnn_test_path, gcn0_test_path, gcn1_test_path, cnn_checkpoint_path, gcn0_checkpoint_path, gcn1_checkpoint_path):
+
+""" Define a function to test HACNet, the 3D-CNN, or one of the GCN components """
+
+def predict(architecture, cnn_test_path, gcn0_test_path, gcn1_test_path, cnn_checkpoint_path, gcn0_checkpoint_path, gcn1_checkpoint_path):
 
     """
-    Define a function to test the hybrid model, 3D-CNN, or MP-GCN
     Inputs:
-    1) test: either "hybrid", "cnn", "gcn0", or "gcn1"    
+    1) test: either "HACNet", "cnn", "gcn0", or "gcn1"    
     2) cnn_test_path: path to cnn test set npy file
     3) gcn0_test_path: path to gcn0 test set hdf file
     4) gcn1_test_path: path to gcn1 test set hdf file
@@ -51,7 +53,7 @@ def predict(test, cnn_test_path, gcn0_test_path, gcn1_test_path, cnn_checkpoint_
     else:   
         device = torch.device('cpu')  
 
-    if test == 'hybrid' or 'cnn':
+    if architecture == 'HACNet' or 'cnn':
         # 3D-CNN
         batch_size = 50
         # load dataset
@@ -86,7 +88,7 @@ def predict(test, cnn_test_path, gcn0_test_path, gcn1_test_path, cnn_checkpoint_
                 y_true_cnn[batch_ind*batch_size:batch_ind*batch_size+bsize] = ytrue
                 y_pred_cnn[batch_ind*batch_size:batch_ind*batch_size+bsize] = ypred
 
-    if test == 'hybrid' or 'gcn0':
+    if architecture == 'HACNet' or 'gcn0':
         # GCN-0
         gcn0_dataset = GCN_Dataset(gcn0_test_path)
         # initialize testing data loader
@@ -124,7 +126,7 @@ def predict(test, cnn_test_path, gcn0_test_path, gcn1_test_path, cnn_checkpoint_
         y_true_gcn0 = np.concatenate(y_true_gcn0).reshape(-1, 1).squeeze(1)
         y_pred_gcn0 = np.concatenate(y_pred_gcn0).reshape(-1, 1).squeeze(1)
 
-    if test == 'hybrid' or 'gcn1':
+    if architecture == 'HACNet' or 'gcn1':
         # GCN-1
         gcn1_dataset = GCN_Dataset(gcn1_test_path)
         # initialize testing data loader
@@ -163,7 +165,7 @@ def predict(test, cnn_test_path, gcn0_test_path, gcn1_test_path, cnn_checkpoint_
         y_pred_gcn1 = np.concatenate(y_pred_gcn1).reshape(-1, 1).squeeze(1)
 
     # compute metrics
-    if test == 'hybrid':
+    if architecture == 'HACNet':
         y_true = y_true_cnn/3 + y_true_gcn0/3 + y_true_gcn1/3
         y_pred = y_pred_cnn/3 + y_pred_gcn0/3 + y_pred_gcn1/3
         # define rmse
@@ -181,7 +183,7 @@ def predict(test, cnn_test_path, gcn0_test_path, gcn1_test_path, cnn_checkpoint_
         # define standard deviation
         std = np.std(y_pred)
 
-    if test == 'cnn':
+    if architecture == 'cnn':
         y_true = y_true_cnn
         y_pred = y_pred_cnn
         # define rmse
@@ -199,7 +201,7 @@ def predict(test, cnn_test_path, gcn0_test_path, gcn1_test_path, cnn_checkpoint_
         # define standard deviation
         std = np.std(y_pred)
 
-    if test == 'gcn0':
+    if architecture == 'gcn0':
         y_true = y_true_gcn0
         y_pred = y_pred_gcn0
         # define rmse
@@ -217,7 +219,7 @@ def predict(test, cnn_test_path, gcn0_test_path, gcn1_test_path, cnn_checkpoint_
         # define standard deviation
         std = np.std(y_pred)
 
-    if test == 'gcn1':
+    if architecture == 'gcn1':
         y_true = y_true_gcn1
         y_pred = y_pred_gcn1
         # define rmse
@@ -272,16 +274,12 @@ class GCN_Dataset(Dataset):
         return len(self.data_list)
 
     def __getitem__(self, item):
-
         if item in self.data_dict.keys():
             return self.data_dict[item]
-
         pdbid, affinity = self.data_list[item]
         node_feats, coords = None, None
-
         coords=h5py.File(self.data_file,'r')[pdbid][:,0:3]
         dists=pairwise_distances(coords, metric='euclidean')
-        
         self.data_dict[item] = (pdbid, dists)
         return self.data_dict[item]
 
@@ -293,28 +291,28 @@ class GCN(torch.nn.Module):
     def __init__(self, in_channels, gather_width=128, prop_iter=4, dist_cutoff=3.5):
         super(GCN, self).__init__()
 
-        #define distance cutoff
+        # define distance cutoff
         self.dist_cutoff=torch.Tensor([dist_cutoff])
         if torch.cuda.is_available():
             self.dist_cutoff = self.dist_cutoff.cuda()
 
-        #Attentional aggregation
+        # attentional aggregation
         self.gate_net = nn.Sequential(nn.Linear(in_channels, int(in_channels/2)), nn.Softsign(), nn.Linear(int(in_channels/2), int(in_channels/4)), nn.Softsign(), nn.Linear(int(in_channels/4),1))
         self.attn_aggr = AttentionalAggregation(self.gate_net)
         
-        #Gated Graph Neural Network
+        # Gated Graph Neural Network
         self.gate = GatedGraphConv(in_channels, prop_iter, aggregation=self.attn_aggr)
 
-        #Simple neural networks for use in asymmetric attentional aggregation
+        # simple neural networks for use in asymmetric attentional aggregation
         self.attn_net_i=nn.Sequential(nn.Linear(in_channels * 2, in_channels), nn.Softsign(),nn.Linear(in_channels, gather_width), nn.Softsign())
         self.attn_net_j=nn.Sequential(nn.Linear(in_channels, gather_width), nn.Softsign())
 
-        #Final set of linear layers for making affinity prediction
+        # final set of linear layers for making affinity prediction
         self.output = nn.Sequential(nn.Linear(gather_width, int(gather_width / 1.5)), nn.ReLU(), nn.Linear(int(gather_width / 1.5), int(gather_width / 2)), nn.ReLU(), nn.Linear(int(gather_width / 2), 1))
 
     def forward(self, data):
 
-        #Move data to GPU
+        # move data to GPU
         if torch.cuda.is_available():
             data.x = data.x.cuda()
             data.edge_attr = data.edge_attr.cuda()
@@ -346,6 +344,7 @@ class GCN(torch.nn.Module):
 sent to the fully-connected network """
 
 class MLP_Dataset(Dataset):
+  
 	def __init__(self, npy_path, feat_dim=22):
 		super(MLP_Dataset, self).__init__()
 		self.npy_path = npy_path
@@ -366,11 +365,12 @@ class MLP_Dataset(Dataset):
 
 
 """ Define fully-connected network class """
+
 class MLP(nn.Module):
+
 	def __init__(self, use_cuda=True):
 		super(MLP, self).__init__()     
 		self.use_cuda = use_cuda
-
 		self.fc1 = nn.Linear(2048, 100)
 		torch.nn.init.normal_(self.fc1.weight, 0, 1)
 		self.fc1_bn = nn.BatchNorm1d(num_features=100, affine=True, momentum=0.3).train()
@@ -381,6 +381,6 @@ class MLP(nn.Module):
 	def forward(self, x):
 		fc1_z = self.fc1(x)
 		fc1_y = self.relu(fc1_z)
-		fc1 = self.fc1_bn(fc1_y) if fc1_y.shape[0]>1 else fc1_y  #batchnorm train require more than 1 batch
+		fc1 = self.fc1_bn(fc1_y) if fc1_y.shape[0]>1 else fc1_y
 		fc2_z = self.fc2(fc1)
 		return fc2_z, fc1_z
