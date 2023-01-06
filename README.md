@@ -23,6 +23,12 @@ can be found at: https://drive.google.com/drive/folders/1yB2voUxwzhrQRh0JXnOD3Bz
 ## Associated Preprint
 https://arxiv.org/abs/2212.12440
 
+## Python Package
+https://pypi.org/project/HACNet/
+
+in order to install the HACNet package, simply run:
+```pip install HACNet```
+
 ## Contact
 Please feel free to reach out to us through either of the following emails if you have any questions or need any additional files:
 
