@@ -1,8 +1,9 @@
 ![hacnet_logo-removebg-preview (2)](https://user-images.githubusercontent.com/98780179/198727732-de8a6370-0086-4d1e-a827-e7de432f2716.png)
 
-![image](https://user-images.githubusercontent.com/98780179/211151282-1ed27ffb-cc62-44bb-8339-08a952b229f0.png)
-
 # HAC-Net: A Hybrid Attention-Based Convolutional Neural Network for Highly Accurate Protein-Ligand Binding Affinity Prediction
+
+![image](https://user-images.githubusercontent.com/98780179/211151294-38993a75-ccaf-4671-a971-23a9d866c655.png)
+
 
 ## Summary
 Applying deep learning concepts from image detection and graph theory has greatly advanced protein-ligand binding affinity prediction, a challenge with enormous ramifications for both drug discovery and protein engineering. We build upon these advances by designing a novel deep learning architecture consisting of a 3-dimensional convolutional neural network utilizing channel-wise attention and two graph convolutional networks utilizing attention-based aggregation of node features. HAC-Net (Hybrid Attention-Based Convolutional Neural Network) obtains state-of-the-art results on the PDBbind v.2016 core set, the most widely recognized benchmark in the field. We extensively assess the generalizability of our model using multiple train-test splits, each of which maximizes differences between either protein structures, protein sequences, or ligand extended-connectivity fingerprints. Furthermore, we perform 10-fold cross-validation with a similarity cutoff between SMILES strings of ligands in the training and test sets, and also evaluate the performance of HAC-Net on lower-quality data. We envision that this model can be extended to a broad range of supervised learning problems related to structure-based biomolecular property prediction.
