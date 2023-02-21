@@ -140,7 +140,6 @@ def train_CNN(training_data, validation_data, checkpoint_path, best_checkpoint_p
     # define parameters
     batch_size = 50
     learning_rate = .0007
-    learning_decay_iter=150
     epoch_count = 100
 
     # set CUDA for PyTorch
@@ -162,7 +161,6 @@ def train_CNN(training_data, validation_data, checkpoint_path, best_checkpoint_p
     model.to(device)
     loss_func = nn.MSELoss().float()
     optimizer = RMSprop(model.parameters(), lr=learning_rate)
-    scheduler = lr_scheduler.StepLR(optimizer, step_size=150, gamma=0.95)
     
     # initialize training variables
     epoch_start = 0
@@ -239,7 +237,6 @@ def train_CNN(training_data, validation_data, checkpoint_path, best_checkpoint_p
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            scheduler.step()
             step += 1
             print("[%d/%d-%d/%d] training loss: %.3f" % (epoch_ind+1, epoch_count, batch_ind+1, batch_count, loss))
 
