@@ -203,32 +203,32 @@ def train_MLP(training_data, validation_data, checkpoint_path, best_checkpoint_p
                 "epoch_avg_corr" : epoch_avg_corr,
                 "best_avg_corr" : best_average_corr 
             }
-            if (average_corr > best_average_corr):
-                best_average_corr = average_corr
-                checkpoint_dict["best_avg_corr"] = best_average_corr
-                best_checkpoint_dict = checkpoint_dict
-                torch.save(best_checkpoint_dict, best_checkpoint_path)
-            torch.save(checkpoint_dict, checkpoint_path)
+				if (average_corr > best_average_corr):
+						best_average_corr = average_corr
+						checkpoint_dict["best_avg_corr"] = best_average_corr
+						best_checkpoint_dict = checkpoint_dict
+						torch.save(best_checkpoint_dict, best_checkpoint_path)
+				torch.save(checkpoint_dict, checkpoint_path)
         step += 1
         print('Epoch: ', step)
-    val_loss, average_corr = validate_model()
-    epoch_train_losses.append(np.mean(losses))
-    epoch_val_losses.append(val_loss)
-    epoch_avg_corr.append(average_corr)
-    checkpoint_dict = {
-                "model_state_dict": model.state_dict(),
-                "optimizer_state_dict": optimizer.state_dict(),
-                "loss": loss,
-                "step": step,
-                "epoch": epoch_ind,
-                "epoch_val_losses": epoch_val_losses,
-                "epoch_train_losses": epoch_train_losses,
-                "epoch_avg_corr" : epoch_avg_corr,
-                "best_avg_corr": best_average_corr
-            }
-    if (average_corr > best_average_corr):
-        best_average_corr = average_corr
-        checkpoint_dict["best_avg_corr"] = best_average_corr
-        best_checkpoint_dict = checkpoint_dict
-        torch.save(best_checkpoint_dict, best_checkpoint_path)
-    torch.save(checkpoint_dict, checkpoint_path)
+				val_loss, average_corr = validate_model()
+				epoch_train_losses.append(np.mean(losses))
+				epoch_val_losses.append(val_loss)
+				epoch_avg_corr.append(average_corr)
+				checkpoint_dict = {
+										"model_state_dict": model.state_dict(),
+										"optimizer_state_dict": optimizer.state_dict(),
+										"loss": loss,
+										"step": step,
+										"epoch": epoch_ind,
+										"epoch_val_losses": epoch_val_losses,
+										"epoch_train_losses": epoch_train_losses,
+										"epoch_avg_corr" : epoch_avg_corr,
+										"best_avg_corr": best_average_corr
+								}
+				if (average_corr > best_average_corr):
+						best_average_corr = average_corr
+						checkpoint_dict["best_avg_corr"] = best_average_corr
+						best_checkpoint_dict = checkpoint_dict
+						torch.save(best_checkpoint_dict, best_checkpoint_path)
+				torch.save(checkpoint_dict, checkpoint_path)
