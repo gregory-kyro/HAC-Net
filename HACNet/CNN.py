@@ -319,7 +319,7 @@ def extract_features(input, checkpoint_path, save_path):
     checkpoint = torch.load(checkpoint_path, map_location=device)
     # model state dict
     model_state_dict = checkpoint.pop("model_state_dict")
-    model.load_state_dict(model_state_dict, strict=False)
+    model.load_state_dict(model_state_dict, strict=True)
     # create empty arrays to hold predicted and true values
     ytrue_arr = np.zeros((len(dataset),), dtype=np.float32)
     ypred_arr = np.zeros((len(dataset),), dtype=np.float32)
