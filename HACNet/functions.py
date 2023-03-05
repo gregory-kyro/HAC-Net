@@ -100,7 +100,7 @@ def predict(architecture, cnn_test_path, gcn0_test_path, gcn1_test_path, cnn_che
         gcn0_checkpoint = torch.load(gcn0_checkpoint_path, map_location=device)
         # model state dict
         gcn0_model_state_dict = gcn0_checkpoint.pop("model_state_dict")
-        gcn0_model.load_state_dict(gcn0_model_state_dict, strict=False)
+        gcn0_model.load_state_dict(gcn0_model_state_dict, strict=True)
         test_data_hdf = h5py.File(gcn0_test_path, 'r')
         gcn0_model.eval()
         y_true_gcn0, y_pred_gcn0, pdbid_array = [], [], []
@@ -138,7 +138,7 @@ def predict(architecture, cnn_test_path, gcn0_test_path, gcn1_test_path, cnn_che
         gcn1_checkpoint = torch.load(gcn1_checkpoint_path, map_location=device)
         # model state dict
         gcn1_model_state_dict = gcn1_checkpoint.pop("model_state_dict")
-        gcn1_model.load_state_dict(gcn1_model_state_dict, strict=False)
+        gcn1_model.load_state_dict(gcn1_model_state_dict, strict=True)
         test_data_hdf = h5py.File(gcn1_test_path, 'r')
         gcn1_model.eval()
         y_true_gcn1, y_pred_gcn1, pdbid_array = [], [], []
