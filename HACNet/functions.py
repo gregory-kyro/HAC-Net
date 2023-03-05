@@ -70,7 +70,7 @@ def predict(architecture, cnn_test_path, gcn0_test_path, gcn1_test_path, cnn_che
         cnn_checkpoint = torch.load(cnn_checkpoint_path, map_location=device)
         # model state dict
         cnn_model_state_dict = cnn_checkpoint.pop("model_state_dict")
-        cnn_model.load_state_dict(cnn_model_state_dict, strict=False)
+        cnn_model.load_state_dict(cnn_model_state_dict, strict=True)
         # create empty arrays to hold predicted and true values
         y_true_cnn = np.zeros((len(cnn_dataset),), dtype=np.float32)
         y_pred_cnn = np.zeros((len(cnn_dataset),), dtype=np.float32)
