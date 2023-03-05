@@ -169,7 +169,7 @@ def train_MLP(training_data, validation_data, checkpoint_path, best_checkpoint_p
         best_average_corr = best_checkpoint["best_avg_corr"]
         checkpoint = torch.load(previous_checkpoint, map_location=device)
         model_state_dict = checkpoint.pop("model_state_dict")
-        model.load_state_dict(model_state_dict, strict=False)
+        model.load_state_dict(model_state_dict, strict=True)
         optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
         epoch_start = checkpoint["epoch"]
         loss = checkpoint["loss"]
