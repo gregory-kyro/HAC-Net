@@ -227,7 +227,7 @@ def train_GCN(training_data, validation_data, checkpoint_path, best_checkpoint_p
         else:
             model_train_dict = torch.load(load_checkpoint_path, map_location=torch.device('cpu'))
             best_checkpoint = torch.load(best_previous_checkpoint, map_location = torch.device('cpu'))
-        model.load_state_dict(model_train_dict['model_state_dict'])
+        model.load_state_dict(model_train_dict['model_state_dict'], strict=True)
         checkpoint_epoch = model_train_dict['epoch']
         checkpoint_step = model_train_dict['step']
         epoch_train_losses = model_train_dict['epoch_train_losses']
