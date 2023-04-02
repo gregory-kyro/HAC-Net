@@ -22,6 +22,9 @@ All of the:
 
 can be found at: https://drive.google.com/drive/folders/1yB2voUxwzhrQRh0JXnOD3BzY8ZQrbgUK?usp=sharing
 
+## Associated Journal Article
+https://pubs.acs.org/doi/10.1021/acs.jcim.3c00251
+
 ## Associated Preprint
 https://arxiv.org/abs/2212.12440
 
