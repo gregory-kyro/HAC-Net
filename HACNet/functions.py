@@ -1,33 +1,52 @@
-import h5py
-import numpy as np
-import math
-import os
-import random
-import matplotlib.pyplot as plt
-import torch
-from torch import nn as nn
-from torch.nn.parallel import DataParallel, DistributedDataParallel
-from torch_geometric.nn import DataParallel as GeometricDataParallel
-from torch_geometric.nn.aggr import AttentionalAggregation
-from torch_geometric.data import DataListLoader, Data
-from torch_geometric.utils import dense_to_sparse, add_self_loops, dense_to_sparse
-from torch.utils.data import Dataset, DataLoader
-from torch import Tensor
-from torch_geometric.nn.conv import MessagePassing, GatedGraphConv
-from torch_geometric.nn import global_add_pool
-from torch._C import NoneType
-from torch.optim import Adam
-import matplotlib.pyplot as plt
-from tqdm import tqdm
-from scipy import stats
-from scipy.stats import pearsonr, spearmanr
-from sklearn.metrics import *
-from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error, pairwise_distances
+  # import packages
+  from biopandas.pdb import PandasPdb
+  from biopandas.mol2 import PandasMol2
+  import pickle
+  import numpy as np
+  import openbabel.pybel
+  from openbabel.pybel import Smarts
+  from math import ceil, sin, cos, sqrt, pi
+  from itertools import combinations
+  import pandas as pd
+  import csv
+  import os
+  import random
+  import xml.etree.ElementTree as ET
+  import h5py
+  from sklearn.metrics import pairwise_distances
+  import torch
+  from torch.utils.data import Dataset
+  from torch_geometric.nn.conv import MessagePassing, GatedGraphConv
+  from torch_geometric.nn import global_add_pool
+  from torch_geometric.utils import add_self_loops
+  from torch_geometric.nn.aggr import AttentionalAggregation
+  from torch import Tensor
+  import torch.nn as nn
+  import numpy as np
+  import math
+  from torch.nn.parallel import DataParallel
+  from torch_geometric.nn import DataParallel as GeometricDataParallel
+  from torch_geometric.data import DataListLoader, Data
+  from torch_geometric.utils import dense_to_sparse
+  from torch.utils.data import Dataset, DataLoader
+  from torch._C import NoneType
+  import matplotlib.pyplot as plt
+  from tqdm import tqdm
+  import scipy as sp
+  from scipy import stats
+  from scipy.stats import pearsonr, spearmanr
+  from sklearn.metrics import *
+  from sklearn import metrics
+  from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error, pairwise_distances
+  from pymol import cmd
+  import requests
+  from pymol import cmd
+  from IPython.display import Image, display
 
 
-""" Define a function to test HACNet, the 3D-CNN, or one of the GCN components """
+""" Define a function to test HACNet, the 3D-CNN, or one of the GCN components on an HDF file """
 
-def predict(architecture, cnn_test_path, gcn0_test_path, gcn1_test_path, cnn_checkpoint_path, gcn0_checkpoint_path, gcn1_checkpoint_path):
+def predict_hdf(architecture, cnn_test_path, gcn0_test_path, gcn1_test_path, cnn_checkpoint_path, gcn0_checkpoint_path, gcn1_checkpoint_path):
 
     """
     Inputs:
