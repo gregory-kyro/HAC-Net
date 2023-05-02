@@ -407,7 +407,7 @@ class MLP(nn.Module):
 
 	""" define a function to predict pkd for a single protein-ligand complex """
 
-def predict_pkd(protein_pdb, ligand_mol2, verbose=True): 
+def predict_pkd(protein_pdb, ligand_mol2, elements_xml, cnn_params, gcn0_params, gcn1_params, mlp_params, verbose=True): 
 
   """
   Inputs:
