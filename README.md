@@ -14,7 +14,7 @@ Applying deep learning concepts from image detection and graph theory has greatl
 HAC-Net (Hybrid Attention-Based Convolutional Neural Network) is a novel deep learning architecture for protein-ligand binding affinity prediction consisting of a 3D-CNN utilizing channel-wise attention and two GCNs utilizing attention-based aggregation of node features. This combination achieves an optimal balance between the superior performance of our GCNs and the complementary learning style of our 3D-CNN. Furthermore, the inclusion of two architecturally-identical GCNs mitigates noise resulting from the inherently-stochastic nature of the training process. By incorporating multiple forms of attention with advanced concepts from CNN and GCN architectural design, we are able to demonstrate state-of-the-art performance on the PDBbind benchmark for protein-ligand binding affinity prediction, as well the ability to generalize to complexes unlike those used for training.
 
 ## Tutorial Notebook Using HACNet Python Package
-https://colab.research.google.com/drive/1Z9ocT0z48XVi2fOWTGERUXSZ3suCMTdF#scrollTo=-7xbt5vlNdSB
+https://colab.research.google.com/github/gregory-kyro/HAC-Net/blob/main/HACNet.ipynb#scrollTo=3EjmhS9bEE2I
 
 ## Important Files and Notebooks
 All of the:
