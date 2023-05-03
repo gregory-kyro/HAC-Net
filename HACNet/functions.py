@@ -83,8 +83,7 @@ def predict_hdf(architecture, cnn_test_path, gcn0_test_path, gcn1_test_path, cnn
         # define model
         cnn_model = MLP(use_cuda=use_cuda)
         cnn_model.to(device)
-        if isinstance(cnn_model, (DistributedDataParallel, DataParallel)):
-            cnn_model = cnn_model.module
+
         # load checkpoint file
         cnn_checkpoint = torch.load(cnn_checkpoint_path, map_location=device)
         # model state dict
