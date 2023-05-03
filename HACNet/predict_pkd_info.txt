@@ -1,1 +1,12 @@
+In order to create a function to perform the entire HAC-Net prediction pipeline that is user-friendly and does not require any external programs, we introduce a few subtle discrepancies related to preprocessing the input files, although the original function is still available in HACNet/functions.py
 
+Discrepancies:
+- Rather than using protein pocket PDB files provided by PDBbind, we create the pockets from the original protein PDB file, attempting to mimic their protocol
+- Rather than using Chimera to add hydrogens to the pocket PDB file and convert to Mol2 format, we use PyMOL
+- We select the eqeq charge calculation method for all predictions (this method was used for > 99.9 % of complexes presented in our journal article)
+
+Testing HACNet with this data-preprocessing protocol on the PDBbind 2016 core set protein-ligand complexes yields the following results:
+- Pearson r:  0.83
+- Spearman p:  0.82
+- RMSE:  1.26
+- MAE:  1.01
