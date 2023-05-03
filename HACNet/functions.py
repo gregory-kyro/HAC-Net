@@ -50,7 +50,7 @@ def predict_hdf(architecture, cnn_test_path, gcn0_test_path, gcn1_test_path, cnn
 
     """
     Inputs:
-    1) test: either "HACNet", "cnn", "gcn0", or "gcn1"    
+    1) architecture: either "HACNet", "cnn", "gcn0", or "gcn1"    
     2) cnn_test_path: path to cnn test set npy file
     3) gcn0_test_path: path to gcn0 test set hdf file
     4) gcn1_test_path: path to gcn1 test set hdf file
