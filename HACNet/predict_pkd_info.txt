@@ -6,7 +6,13 @@ Discrepancies:
 - We select the eqeq charge calculation method for all predictions (this method was used for > 99.9 % of complexes presented in our journal article)
 
 Testing HACNet with this data-preprocessing protocol on the PDBbind 2016 core set protein-ligand complexes yields the following results:
-- Pearson r:  0.83
-- Spearman p:  0.82
-- RMSE:  1.26
-- MAE:  1.01
+- Pearson r: 0.83
+- Spearman p: 0.82
+- RMSE: 1.26
+- MAE: 1.01
+
+Quantitative comparison between predict_hdf (original) and predict_pkd methods on the PDBbind 2016 core set:
+- Pearson r: 0.98
+- Spearman p: 0.98
+- RMSE: 0.35
+- MAE: 0.23
