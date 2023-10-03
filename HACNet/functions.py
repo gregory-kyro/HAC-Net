@@ -445,6 +445,7 @@ def predict_pkd(protein_pdb, ligand_mol2, elements_xml, cnn_params, gcn0_params,
           # initialize list to store names of all features in the correct order
           self.FEATURE_NAMES = []
 
+          # validate and process atom codes and labels
           if atom_codes is not None:
               if not isinstance(atom_codes, dict):
                   raise TypeError('Atom codes should be dict, got %s instead'
@@ -489,6 +490,7 @@ def predict_pkd(protein_pdb, ligand_mol2, elements_xml, cnn_params, gcn0_params,
               
               self.NUM_ATOM_CLASSES = len(atom_classes)
 
+          # validate and process named properties
           if named_properties is not None:
               if not isinstance(named_properties, (list, tuple, np.ndarray)):
                   raise TypeError('named_properties must be a list')
@@ -520,7 +522,8 @@ def predict_pkd(protein_pdb, ligand_mol2, elements_xml, cnn_params, gcn0_params,
           if save_molecule_codes:
               # Remember if an atom belongs to the ligand or to the protein
               self.FEATURE_NAMES.append('molcode')
-          
+
+          # process custom callable properties
           self.CALLABLES = []
          
           if custom_properties is not None:
@@ -537,7 +540,8 @@ def predict_pkd(protein_pdb, ligand_mol2, elements_xml, cnn_params, gcn0_params,
                   self.CALLABLES.append(func)
                   
                   self.FEATURE_NAMES.append(name)
-         
+
+          # process SMARTS properties and labels
           if smarts_properties is None:
               # SMARTS definition for other properties
               self.SMARTS = [
@@ -565,17 +569,19 @@ def predict_pkd(protein_pdb, ligand_mol2, elements_xml, cnn_params, gcn0_params,
           else:
               smarts_labels = ['smarts%s' % i for i in range(len(self.SMARTS))]
 
-          # Compile patterns
+          # Compile SMARTS patterns for matching
           self.compile_smarts()
 
           self.FEATURE_NAMES += smarts_labels
 
+      # define function to compile SMARTS patterns for efficient matching
       def compile_smarts(self):
           self.__PATTERNS = []
           
           for smarts in self.SMARTS:
               self.__PATTERNS.append(openbabel.pybel.Smarts(smarts))
 
+      # define function to encode the atomic number using one-hot encoding
       def encode_num(self, atomic_num):
 
           if not isinstance(atomic_num, int):
@@ -592,6 +598,7 @@ def predict_pkd(protein_pdb, ligand_mol2, elements_xml, cnn_params, gcn0_params,
           
           return encoding
 
+      # define function to find substructures in the molecule that match the SMARTS patterns
       def find_smarts(self, molecule):
 
           if not isinstance(molecule, openbabel.pybel.Molecule):
@@ -608,6 +615,7 @@ def predict_pkd(protein_pdb, ligand_mol2, elements_xml, cnn_params, gcn0_params,
 
           return features
 
+      # define function to extract the features from the molecule
       def get_features(self, molecule, molcode=None):
 
           if not isinstance(molecule, openbabel.pybel.Molecule):
@@ -656,7 +664,9 @@ def predict_pkd(protein_pdb, ligand_mol2, elements_xml, cnn_params, gcn0_params,
 
           return coords, features
 
+      # define function to save the Featurizer to a pickle file
       def to_pickle(self, fname='featurizer.pkl'):
+          
           # patterns can't be pickled, we need to temporarily remove them
           patterns = self.__PATTERNS[:]
           
