@@ -2,7 +2,7 @@
 
 # HAC-Net: A Hybrid Attention-Based Convolutional Neural Network for Highly Accurate Protein-Ligand Binding Affinity Prediction
 
-![image](https://img.shields.io/pypi/v/HACNet.svg)
+[![image](https://img.shields.io/pypi/v/HACNet.svg)](https://pypi.org/project/HACNet/)
 
 <a target="_blank" href="https://colab.research.google.com/github/gregory-kyro/HAC-Net/blob/main/HACNet.ipynb">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
