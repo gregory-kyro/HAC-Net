@@ -21,7 +21,7 @@ HAC-Net (Hybrid Attention-Based Convolutional Neural Network) is a novel deep le
 https://user-images.githubusercontent.com/98780179/236011365-6597f75e-8b19-4f9e-93d6-944875227a22.mp4
 
 ## Tutorial Notebook Using HACNet Python Package
-<Currently under revision>
+[Currently under revision]
 
 ## Important Files and Notebooks
 All of the:
