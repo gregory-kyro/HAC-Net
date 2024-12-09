@@ -961,7 +961,7 @@ def predict_pkd(protein_pdb, ligand_mol2, elements_xml, cnn_params, gcn0_params,
       
       # fill model state dict with parameters
       gcn0_model_state_dict = gcn0_checkpoint.pop("model_state_dict")
-      gcn0_model.load_state_dict(gcn0_model_state_dict, strict=False)
+      gcn0_model.load_state_dict(gcn0_model_state_dict, strict=True)
 
       # put model in evaluation mode
       gcn0_model.eval()
@@ -995,7 +995,7 @@ def predict_pkd(protein_pdb, ligand_mol2, elements_xml, cnn_params, gcn0_params,
       
       # fill model state dict with parameters
       gcn1_model_state_dict = gcn1_checkpoint.pop("model_state_dict")
-      gcn1_model.load_state_dict(gcn1_model_state_dict, strict=False)
+      gcn1_model.load_state_dict(gcn1_model_state_dict, strict=True)
 
       # put second GCN in evaluation mode
       gcn1_model.eval()
